@@ -1,0 +1,45 @@
+[package]
+name = "nyxgba"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_debug_implementations = "warn"
+unused_qualifications = "warn"
+rust_2018_idioms = { level = "warn", priority = -1 }
+
+[lints.clippy]
+# groups first, negative priority so individual entries below override
+pedantic = { level = "warn", priority = -1 }
+# --- deny: Should always be avoided ---
+mem_forget = "deny"
+undocumented_unsafe_blocks = "deny"
+float_cmp = "deny"
+lossy_float_literal = "deny"
+rest_pat_in_fully_bound_structs = "deny"
+allow_attributes_without_reason = "deny"
+panic_in_result_fn = "deny"
+
+# --- warn: allowed pre commit ---
+# General panics
+unwrap_used = "warn"
+expect_used = "warn"
+exit = "warn"
+todo = "warn"
+panic = "warn"
+unimplemented = "warn"
+clone_on_ref_ptr = "warn"
+verbose_file_reads = "warn"
+assertions_on_result_states = "warn"
+# Arithmetic safety
+arithmetic_side_effects = "warn"
+unchecked_time_subtraction = "warn"
+as_conversions = "warn"
+debug_assert_with_mut_call = "warn"
+dbg_macro = "warn"
+#slice safety
+string_slice = "warn"
+indexing_slicing = "warn"
