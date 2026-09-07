@@ -4,6 +4,7 @@ use crate::{
     cpu::registers::Registers,
     instructions::Instruction::{self, ArmAlu},
 };
+pub(crate) use registers::Register;
 
 mod arm_exec;
 mod registers;
@@ -11,27 +12,6 @@ mod registers;
 #[derive(Debug)]
 pub(super) struct Cpu {
     registers: Registers,
-}
-
-#[derive(Debug, Clone, Copy)]
-#[allow(dead_code, reason = "will be used later")]
-pub(super) enum Register {
-    R0,
-    R1,
-    R2,
-    R3,
-    R4,
-    R5,
-    R6,
-    R7,
-    R8,
-    R9,
-    R10,
-    R11,
-    R12,
-    R13,
-    R14,
-    R15,
 }
 
 impl Cpu {
@@ -44,10 +24,10 @@ impl Cpu {
         let ArmAlu(arm_instr) = instruction;
         self.run_arm(arm_instr);
     }
-    fn get(&self, reg: Register) -> &i32 {
+    fn get(&self, reg: Register) -> &u32 {
         self.registers.index(reg)
     }
-    fn set(&mut self, reg: Register, value: i32) {
+    fn set(&mut self, reg: Register, value: u32) {
         *self.registers.index_mut(reg) = value;
     }
 }

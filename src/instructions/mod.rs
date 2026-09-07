@@ -17,6 +17,6 @@ pub(crate) struct MovArgs {
 #[derive(Debug)]
 #[allow(dead_code, reason = "will be used later")]
 pub(crate) enum SecondOperand {
-    Immediate(i32),
+    Immediate(u32),
     Register(Register),
 }
