@@ -1,3 +1,3 @@
 fn main() {
-    println!("Hello, world!");
+    nyxgba::nyx_main();
 }
