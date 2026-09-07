@@ -1,19 +1,67 @@
 use crate::{
     Cpu,
-    instructions::{MovArgs, SecondOperand, arm_alu::ArmOpCode},
+    instructions::{
+        SourceOperand,
+        arm::{ArmCommand, ArmOpCode},
+    },
 };
 
 impl Cpu {
-    pub(super) fn run_arm(&mut self, op: ArmOpCode) {
-        match op {
-            ArmOpCode::Mov(mov_args) => self.arm_mov(&mov_args),
+    pub(super) fn run_arm(&mut self, arm: ArmCommand) {
+        match arm.op_code {
+            ArmOpCode::Mov => self.arm_mov(arm),
+            ArmOpCode::Add => self.arm_add(arm),
         }
     }
-    fn arm_mov(&mut self, mov_args: &MovArgs) {
-        let value = match mov_args.source {
-            SecondOperand::Immediate(val) => val,
-            SecondOperand::Register(register) => *self.get(register),
+    fn arm_mov(&mut self, command: ArmCommand) {
+        let ArmCommand {
+            condition: _,
+            op_code: _,
+            set_flag: _,
+            destination_reg: destination,
+            read_reg: _,
+            source,
+        } = command;
+        let value = match source {
+            SourceOperand::Immediate(val) => val,
+            SourceOperand::Register(register) => self.get(register),
         };
-        self.set(mov_args.destination, value);
+        self.set(destination, value);
+    }
+    fn arm_add(&mut self, command: ArmCommand) {
+        let ArmCommand {
+            condition: _,
+            op_code: _,
+            set_flag,
+            destination_reg: destination,
+            read_reg: read,
+            source,
+        } = command;
+        let r_value = match source {
+            SourceOperand::Immediate(val) => val,
+            SourceOperand::Register(register) => self.get(register),
+        };
+        let (result, overflow) = self.get(read).overflowing_add(r_value);
+        if set_flag {
+            self.cpsr.clear_nzcv();
+            if overflow {
+                self.cpsr.set_overflow_flag();
+            }
+            if result == 0 {
+                self.cpsr.set_zero_flag();
+            }
+            if result.cast_signed().is_negative() {
+                self.cpsr.set_signed_flag();
+            }
+        }
+
+        self.set(destination, result);
     }
 }
+
+//TODO:
+// Add tests for add. 5 cases:
+// set_flag on, standard
+// set_flag off, standard, existing flags
+// set_flag on, overflow
+// set_flag on, 0 result

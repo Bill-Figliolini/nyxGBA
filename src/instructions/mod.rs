@@ -1,22 +1,15 @@
-use crate::cpu::Register;
+use crate::{cpu::Register, instructions::arm::ArmCommand};
 
-pub(crate) mod arm_alu;
+pub(crate) mod arm;
 
 #[derive(Debug)]
 pub(crate) enum Instruction {
-    ArmAlu(arm_alu::ArmOpCode),
+    Arm(ArmCommand),
 }
 
-#[derive(Debug)]
-pub(crate) struct MovArgs {
-    pub destination: Register,
-    pub source: SecondOperand,
-}
-
-//TODO: Add Register Access
 #[derive(Debug)]
 #[allow(dead_code, reason = "will be used later")]
-pub(crate) enum SecondOperand {
+pub(crate) enum SourceOperand {
     Immediate(u32),
     Register(Register),
 }

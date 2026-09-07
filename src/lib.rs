@@ -1,17 +1,28 @@
 use crate::{
     cpu::{Cpu, Register},
-    instructions::{Instruction, MovArgs, SecondOperand, arm_alu::ArmOpCode},
+    instructions::{
+        Instruction::Arm,
+        SourceOperand,
+        arm::{ArmCommand, ArmCondition, ArmOpCode},
+    },
 };
 
 mod cpu;
 mod instructions;
 
 pub fn nyx_main() {
-    let mut cpu = Cpu::init();
-    let value = MovArgs {
-        destination: Register::R0,
-        source: SecondOperand::Immediate(10),
-    };
-    let command = Instruction::ArmAlu(ArmOpCode::Mov(value));
-    cpu.run(command);
+    let mut cpu = Cpu::new();
+    let register = Register::R0;
+    let read_reg = Register::R1;
+    let value = 10;
+    let operand = SourceOperand::Immediate(value);
+    let instruction = Arm(ArmCommand {
+        condition: ArmCondition::Temp,
+        op_code: ArmOpCode::Mov,
+        set_flag: false,
+        destination_reg: register,
+        read_reg,
+        source: operand,
+    });
+    cpu.run(instruction);
 }

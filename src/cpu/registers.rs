@@ -28,7 +28,7 @@ pub(super) struct Registers {
 }
 
 impl Registers {
-    pub(super) fn init() -> Self {
+    pub(super) fn new() -> Self {
         Registers {
             general_purpose: [0; 16],
         }
