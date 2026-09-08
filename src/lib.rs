@@ -9,6 +9,7 @@ use crate::{
 
 mod cpu;
 mod instructions;
+mod memory;
 
 pub fn nyx_main() {
     let mut cpu = Cpu::new();
