@@ -41,18 +41,11 @@ impl Cpu {
             SourceOperand::Immediate(val) => val,
             SourceOperand::Register(register) => self.get(register),
         };
-        let (result, overflow) = self.get(read).overflowing_add(r_value);
+        let (result, _overflow) = self.get(read).overflowing_add(r_value);
         if set_flag {
-            self.cpsr.clear_nzcv();
-            if overflow {
-                self.cpsr.set_overflow_flag();
-            }
-            if result == 0 {
-                self.cpsr.set_zero_flag();
-            }
-            if result.cast_signed().is_negative() {
-                self.cpsr.set_signed_flag();
-            }
+            self.cpsr.set_zero_flag(result == 0);
+            self.cpsr
+                .set_signed_flag(result.cast_signed().is_negative());
         }
 
         self.set(destination, result);

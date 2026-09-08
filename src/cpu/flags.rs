@@ -6,38 +6,38 @@ impl CurrentProgramStatusRegister {
     pub(crate) fn new() -> Self {
         Self(0)
     }
-    //Resets the arithmetic flags before operations
     // order, from highest bit to lowest:
     // signed
     // zero
     // carry
     // overflow
-    pub(crate) fn clear_nzcv(&mut self) {
-        self.0 &= !(0b1111 << 28);
-    }
     pub(crate) fn get_signed_flag(self) -> bool {
         self.0 & (1 << 31) != 0
     }
-    pub(crate) fn set_signed_flag(&mut self) {
-        self.0 |= 1 << 31;
+    pub(crate) fn set_signed_flag(&mut self, val: bool) {
+        let val = u32::from(val);
+        self.0 |= val << 31;
     }
     pub(crate) fn get_zero_flag(self) -> bool {
         self.0 & (1 << 30) != 0
     }
-    pub(crate) fn set_zero_flag(&mut self) {
-        self.0 |= 1 << 30;
+    pub(crate) fn set_zero_flag(&mut self, val: bool) {
+        let val = u32::from(val);
+        self.0 |= val << 30;
     }
     pub(crate) fn get_carry_flag(self) -> bool {
         self.0 & (1 << 29) != 0
     }
-    pub(crate) fn set_carry_flag(&mut self) {
-        self.0 |= 1 << 29;
+    pub(crate) fn set_carry_flag(&mut self, val: bool) {
+        let val = u32::from(val);
+        self.0 |= val << 29;
     }
     pub(crate) fn get_overflow_flag(self) -> bool {
         self.0 & (1 << 28) != 0
     }
-    pub(crate) fn set_overflow_flag(&mut self) {
-        self.0 |= 1 << 28;
+    pub(crate) fn set_overflow_flag(&mut self, val: bool) {
+        let val = u32::from(val);
+        self.0 |= val << 28;
     }
 }
 
@@ -50,7 +50,7 @@ mod tests {
         fn signed_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_signed_flag();
+            flags.set_signed_flag(true);
 
             assert_eq!(flags.0, 1 << 31);
             assert!(flags.get_signed_flag());
@@ -59,7 +59,7 @@ mod tests {
         fn zero_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_zero_flag();
+            flags.set_zero_flag(true);
 
             assert_eq!(flags.0, 1 << 30);
             assert!(flags.get_zero_flag());
@@ -68,7 +68,7 @@ mod tests {
         fn carry_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_carry_flag();
+            flags.set_carry_flag(true);
 
             assert_eq!(flags.0, 1 << 29);
             assert!(flags.get_carry_flag());
@@ -77,22 +77,10 @@ mod tests {
         fn overflow_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_overflow_flag();
+            flags.set_overflow_flag(true);
 
             assert_eq!(flags.0, 1 << 28);
             assert!(flags.get_overflow_flag());
-        }
-        #[test]
-        fn clear_clears_all_flags() {
-            let mut flags = CurrentProgramStatusRegister::new();
-            flags.set_carry_flag();
-            flags.set_overflow_flag();
-            flags.set_zero_flag();
-            flags.set_signed_flag();
-
-            flags.clear_nzcv();
-
-            assert_eq!(flags.0, 0);
         }
     }
 }
