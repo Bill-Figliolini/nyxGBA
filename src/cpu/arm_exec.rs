@@ -41,11 +41,14 @@ impl Cpu {
             SourceOperand::Immediate(val) => val,
             SourceOperand::Register(register) => self.get(register),
         };
-        let (result, _overflow) = self.get(read).overflowing_add(r_value);
+        let (result, carry) = self.get(read).overflowing_add(r_value);
         if set_flag {
             self.cpsr.set_zero_flag(result == 0);
             self.cpsr
                 .set_signed_flag(result.cast_signed().is_negative());
+            self.cpsr.set_carry_flag(carry);
+            self.cpsr
+                .set_overflow_flag(result > i32::MAX.cast_unsigned());
         }
 
         self.set(destination, result);
@@ -56,5 +59,75 @@ impl Cpu {
 // Add tests for add. 5 cases:
 // set_flag on, standard
 // set_flag off, standard, existing flags
-// set_flag on, overflow
+// set_flag on,
 // set_flag on, 0 result
+#[cfg(test)]
+mod tests {
+    use super::*;
+    mod add {
+        use crate::{cpu::Register, instructions::Instruction};
+
+        use super::*;
+
+        #[test]
+        fn carry_flag_set_on_overflow() {
+            let mut cpu = Cpu::new();
+            let dest = Register::R1;
+            let reg = Register::R0;
+            cpu.set(reg, u32::MAX);
+            let instr = Instruction::Arm(ArmCommand {
+                condition: crate::instructions::arm::ArmCondition::Temp,
+                op_code: ArmOpCode::Add,
+                set_flag: true,
+                destination_reg: dest,
+                read_reg: reg,
+                source: SourceOperand::Immediate(1),
+            });
+
+            cpu.run(instr);
+
+            assert_eq!(cpu.get(dest), 0);
+            assert!(cpu.cpsr.get_carry_flag());
+        }
+
+        #[test]
+        fn set_flag_on_zero() {
+            let mut cpu = Cpu::new();
+            let dest = Register::R1;
+            let reg = Register::R0;
+            cpu.set(reg, 0);
+            let instr = Instruction::Arm(ArmCommand {
+                condition: crate::instructions::arm::ArmCondition::Temp,
+                op_code: ArmOpCode::Add,
+                set_flag: true,
+                destination_reg: dest,
+                read_reg: reg,
+                source: SourceOperand::Immediate(0),
+            });
+
+            cpu.run(instr);
+
+            assert_eq!(cpu.get(dest), 0);
+            assert!(cpu.cpsr.get_zero_flag());
+        }
+        #[test]
+        fn set_overflow_flag_on_signed_overflow() {
+            let mut cpu = Cpu::new();
+            let dest = Register::R1;
+            let reg = Register::R0;
+            cpu.set(reg, i32::MAX.cast_unsigned());
+            let instr = Instruction::Arm(ArmCommand {
+                condition: crate::instructions::arm::ArmCondition::Temp,
+                op_code: ArmOpCode::Add,
+                set_flag: true,
+                destination_reg: dest,
+                read_reg: reg,
+                source: SourceOperand::Immediate(1),
+            });
+
+            cpu.run(instr);
+
+            assert!(cpu.cpsr.get_overflow_flag());
+        }
+    }
+}
