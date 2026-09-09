@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut};
 
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
-#[allow(dead_code, reason = "will be used later")]
+#[expect(dead_code, reason = "To be used later")]
 pub(crate) enum Register {
     R0 = 0,
     R1 = 1,

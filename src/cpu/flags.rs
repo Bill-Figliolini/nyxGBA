@@ -1,7 +1,7 @@
 #[derive(Debug, Clone, Copy)]
 pub(in crate::cpu) struct CurrentProgramStatusRegister(u32);
 
-#[allow(dead_code, reason = "To be used later")]
+#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 impl CurrentProgramStatusRegister {
     pub(crate) fn new() -> Self {
         Self(0)

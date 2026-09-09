@@ -16,7 +16,7 @@ pub(crate) enum ArmCondition {
 }
 
 #[derive(Debug)]
-#[expect(dead_code, reason = "To be used later")]
+#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmOpCode {
     Mov,
     Add,

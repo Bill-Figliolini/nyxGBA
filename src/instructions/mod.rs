@@ -8,7 +8,7 @@ pub(crate) enum Instruction {
 }
 
 #[derive(Debug)]
-#[allow(dead_code, reason = "will be used later")]
+#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum SourceOperand {
     Immediate(u32),
     Register(Register),
