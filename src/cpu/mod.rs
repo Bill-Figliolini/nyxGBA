@@ -25,15 +25,23 @@ impl Cpu {
             cpsr: CurrentProgramStatusRegister::new(),
         }
     }
-    pub fn run(&mut self, instruction: Instruction) {
+    pub fn step(&mut self, instruction: Instruction) {
         let Arm(arm_instr) = instruction;
         self.run_arm(arm_instr);
     }
-    fn get(&self, reg: Register) -> u32 {
-        *self.registers.index(reg)
+    fn read(&self, reg: Register) -> u32 {
+        if let Register::R15 = reg {
+            self.registers.index(reg).overflowing_add(8).0
+        } else {
+            *self.registers.index(reg)
+        }
     }
-    fn set(&mut self, reg: Register, value: u32) {
-        *self.registers.index_mut(reg) = value;
+    fn write(&mut self, reg: Register, value: u32) {
+        if let Register::R15 = reg {
+            // TODO: Flush Precache pipeline when added
+        } else {
+            *self.registers.index_mut(reg) = value;
+        }
     }
 }
 
@@ -56,7 +64,7 @@ mod tests {
                 let read_reg = Register::R1;
                 let value = 10;
                 let operand = SourceOperand::Immediate(value);
-                let original_read_reg_val = cpu.get(read_reg);
+                let original_read_reg_val = cpu.read(read_reg);
                 let instruction = Arm(ArmCommand {
                     condition: ArmCondition::Temp,
                     op_code: ArmOpCode::Mov,
@@ -66,10 +74,10 @@ mod tests {
                     source: operand,
                 });
 
-                cpu.run(instruction);
+                cpu.step(instruction);
 
-                assert_eq!(cpu.get(register), value);
-                assert_eq!(cpu.get(read_reg), original_read_reg_val);
+                assert_eq!(cpu.read(register), value);
+                assert_eq!(cpu.read(read_reg), original_read_reg_val);
             }
             #[test]
             fn mov_sets_register_with_pointed_register() {
@@ -79,8 +87,8 @@ mod tests {
                 let write_reg = Register::R2;
                 let value = 10;
                 let operand = SourceOperand::Register(write_reg);
-                cpu.set(write_reg, value);
-                let original_read_reg_val = cpu.get(read_reg);
+                cpu.write(write_reg, value);
+                let original_read_reg_val = cpu.read(read_reg);
                 let instruction = Arm(ArmCommand {
                     condition: ArmCondition::Temp,
                     op_code: ArmOpCode::Mov,
@@ -89,10 +97,10 @@ mod tests {
                     read_reg,
                     source: operand,
                 });
-                cpu.run(instruction);
+                cpu.step(instruction);
 
-                assert_eq!(cpu.get(register), value);
-                assert_eq!(cpu.get(read_reg), original_read_reg_val);
+                assert_eq!(cpu.read(register), value);
+                assert_eq!(cpu.read(read_reg), original_read_reg_val);
             }
         }
     }

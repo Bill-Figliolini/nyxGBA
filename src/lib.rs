@@ -25,5 +25,5 @@ pub fn nyx_main() {
         read_reg,
         source: operand,
     });
-    cpu.run(instruction);
+    cpu.step(instruction);
 }

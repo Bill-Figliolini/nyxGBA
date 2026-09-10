@@ -24,9 +24,9 @@ impl Cpu {
         } = command;
         let value = match source {
             SourceOperand::Immediate(val) => val,
-            SourceOperand::Register(register) => self.get(register),
+            SourceOperand::Register(register) => self.read(register),
         };
-        self.set(destination, value);
+        self.write(destination, value);
     }
     fn arm_add(&mut self, command: ArmCommand) {
         let ArmCommand {
@@ -39,9 +39,9 @@ impl Cpu {
         } = command;
         let r_value = match source {
             SourceOperand::Immediate(val) => val,
-            SourceOperand::Register(register) => self.get(register),
+            SourceOperand::Register(register) => self.read(register),
         };
-        let (result, carry) = self.get(read).overflowing_add(r_value);
+        let (result, carry) = self.read(read).overflowing_add(r_value);
         if set_flag {
             self.cpsr.set_zero_flag(result == 0);
             self.cpsr
@@ -51,7 +51,7 @@ impl Cpu {
                 .set_overflow_flag(result > i32::MAX.cast_unsigned());
         }
 
-        self.set(destination, result);
+        self.write(destination, result);
     }
 }
 
@@ -74,7 +74,7 @@ mod tests {
             let mut cpu = Cpu::new();
             let dest = Register::R1;
             let reg = Register::R0;
-            cpu.set(reg, u32::MAX);
+            cpu.write(reg, u32::MAX);
             let instr = Instruction::Arm(ArmCommand {
                 condition: crate::instructions::arm::ArmCondition::Temp,
                 op_code: ArmOpCode::Add,
@@ -84,9 +84,9 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.run(instr);
+            cpu.step(instr);
 
-            assert_eq!(cpu.get(dest), 0);
+            assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_carry_flag());
         }
 
@@ -95,7 +95,7 @@ mod tests {
             let mut cpu = Cpu::new();
             let dest = Register::R1;
             let reg = Register::R0;
-            cpu.set(reg, 0);
+            cpu.write(reg, 0);
             let instr = Instruction::Arm(ArmCommand {
                 condition: crate::instructions::arm::ArmCondition::Temp,
                 op_code: ArmOpCode::Add,
@@ -105,9 +105,9 @@ mod tests {
                 source: SourceOperand::Immediate(0),
             });
 
-            cpu.run(instr);
+            cpu.step(instr);
 
-            assert_eq!(cpu.get(dest), 0);
+            assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_zero_flag());
         }
         #[test]
@@ -115,7 +115,7 @@ mod tests {
             let mut cpu = Cpu::new();
             let dest = Register::R1;
             let reg = Register::R0;
-            cpu.set(reg, i32::MAX.cast_unsigned());
+            cpu.write(reg, i32::MAX.cast_unsigned());
             let instr = Instruction::Arm(ArmCommand {
                 condition: crate::instructions::arm::ArmCondition::Temp,
                 op_code: ArmOpCode::Add,
@@ -125,7 +125,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.run(instr);
+            cpu.step(instr);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
