@@ -7,6 +7,7 @@ use crate::{
     },
 };
 
+mod bitmanip;
 mod cpu;
 mod instructions;
 mod memory;

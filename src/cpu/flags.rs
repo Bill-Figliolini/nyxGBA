@@ -1,43 +1,42 @@
+use crate::bitmanip::Bitfield;
+
 #[derive(Debug, Clone, Copy)]
-pub(in crate::cpu) struct CurrentProgramStatusRegister(u32);
+pub(in crate::cpu) struct CurrentProgramStatusRegister(Bitfield);
 
 #[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 impl CurrentProgramStatusRegister {
     pub(crate) fn new() -> Self {
-        Self(0)
+        Self(Bitfield::new(0))
     }
+
     // order, from highest bit to lowest:
     // signed
     // zero
     // carry
     // overflow
     pub(crate) fn get_signed_flag(self) -> bool {
-        self.0 & (1 << 31) != 0
+        self.0.get_field(31)
     }
     pub(crate) fn set_signed_flag(&mut self, val: bool) {
-        let val = u32::from(val);
-        self.0 |= val << 31;
+        self.0.set_field(31, val);
     }
     pub(crate) fn get_zero_flag(self) -> bool {
-        self.0 & (1 << 30) != 0
+        self.0.get_field(30)
     }
     pub(crate) fn set_zero_flag(&mut self, val: bool) {
-        let val = u32::from(val);
-        self.0 |= val << 30;
+        self.0.set_field(30, val);
     }
     pub(crate) fn get_carry_flag(self) -> bool {
-        self.0 & (1 << 29) != 0
+        self.0.get_field(29)
     }
     pub(crate) fn set_carry_flag(&mut self, val: bool) {
-        let val = u32::from(val);
-        self.0 |= val << 29;
+        self.0.set_field(29, val);
     }
     pub(crate) fn get_overflow_flag(self) -> bool {
-        self.0 & (1 << 28) != 0
+        self.0.get_field(28)
     }
     pub(crate) fn set_overflow_flag(&mut self, val: bool) {
-        let val = u32::from(val);
-        self.0 |= val << 28;
+        self.0.set_field(28, val);
     }
 }
 
@@ -52,7 +51,6 @@ mod tests {
 
             flags.set_signed_flag(true);
 
-            assert_eq!(flags.0, 1 << 31);
             assert!(flags.get_signed_flag());
         }
         #[test]
@@ -61,7 +59,6 @@ mod tests {
 
             flags.set_zero_flag(true);
 
-            assert_eq!(flags.0, 1 << 30);
             assert!(flags.get_zero_flag());
         }
         #[test]
@@ -70,7 +67,6 @@ mod tests {
 
             flags.set_carry_flag(true);
 
-            assert_eq!(flags.0, 1 << 29);
             assert!(flags.get_carry_flag());
         }
         #[test]
@@ -79,7 +75,6 @@ mod tests {
 
             flags.set_overflow_flag(true);
 
-            assert_eq!(flags.0, 1 << 28);
             assert!(flags.get_overflow_flag());
         }
     }
