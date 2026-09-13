@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.104"
 
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"
@@ -43,3 +44,6 @@ dbg_macro = "warn"
 #slice safety
 string_slice = "warn"
 indexing_slicing = "warn"
+
+[dev-dependencies]
+tempdir = "0.3.7"
