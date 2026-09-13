@@ -1,30 +1,19 @@
-use crate::{
-    cpu::{Cpu, Register},
-    instructions::{
-        Instruction::Arm,
-        SourceOperand,
-        arm::{ArmCommand, ArmCondition, ArmOpCode},
-    },
-};
+use std::{path::Path, process::abort};
+
+use crate::{ bitmanip::Bitfield, cpu::Cpu, memory::rom::Rom};
 
 mod bitmanip;
 mod cpu;
+mod helpers;
 mod instructions;
 mod memory;
 
 pub fn nyx_main() {
     let mut cpu = Cpu::new();
-    let register = Register::R0;
-    let read_reg = Register::R1;
-    let value = 10;
-    let operand = SourceOperand::Immediate(value);
-    let instruction = Arm(ArmCommand {
-        condition: ArmCondition::Temp,
-        op_code: ArmOpCode::Mov,
-        set_flag: false,
-        destination_reg: register,
-        read_reg,
-        source: operand,
-    });
+    let instruction = memory::rom::parse(Bitfield::new(0));
     cpu.step(instruction);
+    let path = Path::new("./test-data/suite.gba");
+    let Ok(rom) = Rom::new(path) else { abort() };
+    let result = rom.read8(0);
+    println!("{result}");
 }
