@@ -1,6 +1,6 @@
 use std::{path::Path, process::abort};
 
-use crate::{ bitmanip::Bitfield, cpu::Cpu, memory::rom::Rom};
+use crate::{bitmanip::Bitfield, cpu::Cpu, memory::rom::Rom};
 
 mod bitmanip;
 mod cpu;
