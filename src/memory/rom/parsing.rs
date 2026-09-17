@@ -6,18 +6,18 @@ use crate::{
     cpu::Register,
     instructions::{
         Instruction::{self},
-        SourceOperand,
-        arm::{ArmCommand, ArmCondition, ArmOpCode},
+        arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
     },
 };
 
-pub(crate) fn parse(_input: Bitfield) -> Instruction {
+pub(crate) fn parse(input: Bitfield) -> Instruction {
+    let condition = ArmCondition::new(input.get_range(31, 28));
     let register = Register::R0;
     let read_reg = Register::R1;
     let value = 10;
     let operand = SourceOperand::Immediate(value);
     let instruction = ArmCommand {
-        condition: ArmCondition::Always,
+        condition,
         op_code: ArmOpCode::Mov,
         set_flag: false,
         destination_reg: register,

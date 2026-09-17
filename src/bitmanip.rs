@@ -11,7 +11,19 @@ impl Bitfield {
     }
     pub(crate) fn set_field(&mut self, index: u32, value: bool) {
         let val = u32::from(value);
-        self.0 |= val << (index % 32);
+        let index = index % 32;
+        self.0 = (self.0 & !(1 << index)) | (val << index);
+    }
+
+    pub(crate) fn get_range(self, start: u32, end: u32) -> u32 {
+        let mut subfield = Self::new(0);
+        for i in start..=end {
+            subfield.set_field(i, self.get_field(i));
+        }
+        subfield.raw()
+    }
+    fn raw(self) -> u32 {
+        self.0
     }
 }
 
@@ -36,5 +48,24 @@ mod tests {
 
             assert!(bitfield.get_field(i));
         }
+    }
+    #[test]
+    fn unsets_arbitrary_bit() {
+        for i in 0..32 {
+            let mut bitfield = Bitfield::new(u32::MAX);
+
+            bitfield.set_field(i, false);
+
+            assert!(!bitfield.get_field(i));
+        }
+    }
+
+    #[test]
+    fn gets_range() {
+        let bitfield = Bitfield::new(u32::MAX);
+
+        let result = bitfield.get_range(0, 3);
+
+        assert_eq!(result, 15);
     }
 }

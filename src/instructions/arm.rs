@@ -1,4 +1,4 @@
-use crate::{cpu::Register, instructions::SourceOperand};
+use crate::cpu::Register;
 
 #[derive(Debug)]
 #[expect(dead_code, reason = "To be used later")]
@@ -10,7 +10,8 @@ pub(crate) struct ArmCommand {
     pub read_reg: Register,
     pub source: SourceOperand,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
+#[repr(u8)]
 #[expect(dead_code, reason = "To be used Later")]
 pub(crate) enum ArmCondition {
     Equal,
@@ -31,9 +32,22 @@ pub(crate) enum ArmCondition {
     Never,
 }
 
+impl ArmCondition {
+    pub(crate) fn new(_input: u32) -> Self {
+        ArmCondition::Always
+    }
+}
+
 #[derive(Debug)]
 #[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmOpCode {
     Mov,
     Add,
+}
+
+#[derive(Debug)]
+#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
+pub(crate) enum SourceOperand {
+    Immediate(u32),
+    Register(Register),
 }

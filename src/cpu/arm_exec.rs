@@ -1,9 +1,6 @@
 use crate::{
     Cpu,
-    instructions::{
-        SourceOperand,
-        arm::{ArmCommand, ArmOpCode},
-    },
+    instructions::arm::{ArmCommand, ArmOpCode, SourceOperand},
 };
 
 impl Cpu {

@@ -53,10 +53,7 @@ mod tests {
         use super::*;
         mod arm {
             use super::*;
-            use crate::instructions::{
-                SourceOperand,
-                arm::{ArmCommand, ArmCondition, ArmOpCode},
-            };
+            use crate::instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand};
             #[test]
             fn mov_sets_register_value_with_immediate() {
                 let mut cpu = Cpu::new();
