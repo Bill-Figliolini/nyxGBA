@@ -76,7 +76,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Temp,
+                condition: crate::instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -97,7 +97,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, 0);
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Temp,
+                condition: crate::instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -117,7 +117,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Temp,
+                condition: crate::instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,

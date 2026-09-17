@@ -66,7 +66,7 @@ mod tests {
                 let operand = SourceOperand::Immediate(value);
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = Arm(ArmCommand {
-                    condition: ArmCondition::Temp,
+                    condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
                     destination_reg: register,
@@ -90,7 +90,7 @@ mod tests {
                 cpu.write(write_reg, value);
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = Arm(ArmCommand {
-                    condition: ArmCondition::Temp,
+                    condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
                     destination_reg: register,

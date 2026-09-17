@@ -11,8 +11,24 @@ pub(crate) struct ArmCommand {
     pub source: SourceOperand,
 }
 #[derive(Debug)]
+#[expect(dead_code, reason = "To be used Later")]
 pub(crate) enum ArmCondition {
-    Temp,
+    Equal,
+    NotEqual,
+    CarrySet,
+    CarryCleared,
+    Minus,
+    Plus,
+    SignedOverflow,
+    NoSignedOverflow,
+    UnsignedHigher,
+    UnsignedLowerOrSame,
+    SignedGreaterEq,
+    SignedLesser,
+    SignedGreater,
+    SignedLesserEq,
+    Always,
+    Never,
 }
 
 #[derive(Debug)]

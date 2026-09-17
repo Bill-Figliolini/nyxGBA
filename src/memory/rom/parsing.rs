@@ -17,7 +17,7 @@ pub(crate) fn parse(_input: Bitfield) -> Instruction {
     let value = 10;
     let operand = SourceOperand::Immediate(value);
     let instruction = ArmCommand {
-        condition: ArmCondition::Temp,
+        condition: ArmCondition::Always,
         op_code: ArmOpCode::Mov,
         set_flag: false,
         destination_reg: register,
