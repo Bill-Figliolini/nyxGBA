@@ -1,5 +1,5 @@
 use crate::{
-    Cpu,
+    cpu::cpu_impl::Cpu,
     instructions::arm::{ArmCommand, ArmOpCode, SourceOperand},
 };
 
