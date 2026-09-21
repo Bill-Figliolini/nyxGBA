@@ -1,8 +1,8 @@
-
 use std::ops::{Index, IndexMut};
 
 use crate::{
-    cpu::{Register, flags::CurrentProgramStatusRegister, registers::{Registers}}, instructions::Instruction::{self, Arm},
+    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
+    instructions::Instruction::{self, Arm},
 };
 
 #[derive(Debug)]
