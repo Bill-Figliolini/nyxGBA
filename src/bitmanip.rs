@@ -1,5 +1,3 @@
-use std::ops::Shr;
-
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct Bitfield(u32);
 
@@ -7,7 +5,6 @@ impl Bitfield {
     pub(crate) fn new(input: u32) -> Self {
         Self(input)
     }
-    //Index is processed modulo 32 to avoid potential issues with accessing bits outside underlying u32
     pub(crate) fn get_field(self, index: u32) -> bool {
         debug_assert!(index < 32);
         self.0 & (1 << index) != 0
@@ -25,7 +22,7 @@ impl Bitfield {
         for i in start..=end {
             subfield.set_field(i, self.get_field(i));
         }
-        subfield.raw().shr(start)
+        subfield.raw().strict_shr(start)
     }
     fn raw(self) -> u32 {
         self.0
@@ -70,6 +67,15 @@ mod tests {
         let bitfield = Bitfield::new(u32::MAX);
 
         let result = bitfield.get_range(0, 3);
+
+        assert_eq!(result, 15);
+    }
+
+    #[test]
+    fn gets_range_and_shifts_to_base() {
+        let bitfield = Bitfield::new(u32::MAX);
+
+        let result = bitfield.get_range(6, 9);
 
         assert_eq!(result, 15);
     }
