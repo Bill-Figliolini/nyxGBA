@@ -16,7 +16,8 @@ pub fn nyx_main() {
     let instruction = instructions::parse(Bitfield::new(0));
     cpu.step(instruction);
     let path = Path::new("./test-data/suite.gba");
-    let Ok(rom) = Rom::new(path) else { abort() };
+    let mut rom = Rom::initialize();
+    let Ok(()) = rom.load_rom(path) else { abort() };
     let result = rom.read8(0);
     println!("{result}");
 }

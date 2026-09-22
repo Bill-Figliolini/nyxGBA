@@ -1,7 +1,10 @@
 #![expect(dead_code, reason = "Work in progress module")]
 
+use crate::memory::rom::Rom;
+
 struct MemoryBus {
-    counter: u32
+    rom: Rom,
+    counter: u32,
 }
 #[derive(Debug, Clone, Copy)]
 struct Address(pub u32);

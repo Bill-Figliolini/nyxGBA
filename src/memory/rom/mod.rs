@@ -1,3 +1,3 @@
 mod fileio;
 
-pub(crate) use {fileio::Rom};
+pub(crate) use fileio::Rom;
