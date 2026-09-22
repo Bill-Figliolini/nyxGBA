@@ -11,7 +11,7 @@ pub(crate) struct Rom {
     memory: Vec<u8>,
 }
 
-const GAMEPAKSIZE: usize = 0x0E00_FFFF - 0x0800_0000;
+const GAMEPAKSIZE: usize = 0x0E00_FFFF - 0x09FF_FFFF + 8;
 
 impl Rom {
     pub(crate) fn initialize() -> Self {
