@@ -13,7 +13,7 @@ mod memory;
 compile_error!("Only 32-bit and 64-bit architectures supported");
 pub fn nyx_main() {
     let mut cpu = cpu::startup();
-    let instruction = memory::rom::parse(Bitfield::new(0));
+    let instruction = instructions::parse(Bitfield::new(0));
     cpu.step(instruction);
     let path = Path::new("./test-data/suite.gba");
     let Ok(rom) = Rom::new(path) else { abort() };
