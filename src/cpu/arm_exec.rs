@@ -40,14 +40,16 @@ impl Cpu {
         };
         let l_value = self.read(read);
         let (result, carry) = l_value.overflowing_add(r_value);
-        let overflow = l_value.cast_signed().overflowing_add(r_value.cast_signed()).1;
+        let overflow = l_value
+            .cast_signed()
+            .overflowing_add(r_value.cast_signed())
+            .1;
         if set_flag {
             self.cpsr.set_zero_flag(result == 0);
             self.cpsr
                 .set_signed_flag(result.cast_signed().is_negative());
             self.cpsr.set_carry_flag(carry);
-            self.cpsr
-                .set_overflow_flag(overflow);
+            self.cpsr.set_overflow_flag(overflow);
         }
 
         self.write(destination, result);
@@ -167,6 +169,5 @@ mod tests {
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
-
     }
 }
