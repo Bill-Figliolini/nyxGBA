@@ -38,14 +38,16 @@ impl Cpu {
             SourceOperand::Immediate(val) => val,
             SourceOperand::Register(register) => self.read(register),
         };
-        let (result, carry) = self.read(read).overflowing_add(r_value);
+        let l_value = self.read(read);
+        let (result, carry) = l_value.overflowing_add(r_value);
+        let overflow = l_value.cast_signed().overflowing_add(r_value.cast_signed()).1;
         if set_flag {
             self.cpsr.set_zero_flag(result == 0);
             self.cpsr
                 .set_signed_flag(result.cast_signed().is_negative());
             self.cpsr.set_carry_flag(carry);
             self.cpsr
-                .set_overflow_flag(result > i32::MAX.cast_unsigned());
+                .set_overflow_flag(overflow);
         }
 
         self.write(destination, result);
@@ -126,5 +128,45 @@ mod tests {
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
+        #[test]
+        fn do_not_set_overflow_flag_on_negative_addition() {
+            let mut cpu = Cpu::new();
+            let dest = Register::R1;
+            let reg = Register::R0;
+            let val: i32 = -1;
+            cpu.write(reg, val.cast_unsigned());
+            let instr = Instruction::Arm(ArmCommand {
+                condition: crate::instructions::arm::ArmCondition::Always,
+                op_code: ArmOpCode::Add,
+                set_flag: true,
+                destination_reg: dest,
+                read_reg: reg,
+                source: SourceOperand::Immediate(val.cast_unsigned()),
+            });
+
+            cpu.step(instr);
+
+            assert!(!cpu.cpsr.get_overflow_flag());
+        }
+        #[test]
+        fn set_overflow_flag_on_overflow() {
+            let mut cpu = Cpu::new();
+            let dest = Register::R1;
+            let reg = Register::R0;
+            cpu.write(reg, 0x8000_0000);
+            let instr = Instruction::Arm(ArmCommand {
+                condition: crate::instructions::arm::ArmCondition::Always,
+                op_code: ArmOpCode::Add,
+                set_flag: true,
+                destination_reg: dest,
+                read_reg: reg,
+                source: SourceOperand::Immediate(0x8000_0000),
+            });
+
+            cpu.step(instr);
+
+            assert!(cpu.cpsr.get_overflow_flag());
+        }
+
     }
 }
