@@ -34,9 +34,8 @@ impl Cpu {
     pub(super) fn write(&mut self, reg: Register, value: u32) {
         if let Register::R15 = reg {
             // TODO: Flush Precache pipeline when added
-        } else {
-            *self.registers.index_mut(reg) = value;
         }
+        *self.registers.index_mut(reg) = value;
     }
 }
 
