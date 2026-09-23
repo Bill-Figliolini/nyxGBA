@@ -11,7 +11,7 @@ use crate::{
 };
 
 pub(crate) fn parse(input: Bitfield) -> Instruction {
-    let condition = ArmCondition::new(input.get_range(31, 28));
+    let condition = ArmCondition::new(input.get_range(28, 31));
     let register = Register::R0;
     let read_reg = Register::R1;
     let value = 10;

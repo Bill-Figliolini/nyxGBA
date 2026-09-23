@@ -33,8 +33,15 @@ pub(crate) enum ArmCondition {
 }
 
 impl ArmCondition {
-    pub(crate) fn new(_input: u32) -> Self {
-        ArmCondition::Always
+    pub(crate) fn new(input: u32) -> Self {
+        debug_assert!(input < 0x10);
+        // SAFETY:
+        // input must be less than 0x10
+        //can now be infallibly converted to Armcondition
+        #[allow(clippy::as_conversions, reason = "input is restricted to less than 0x10, which fits in a u8")]
+        #[allow(clippy::cast_possible_truncation, reason = "input is restricted to less than 0x10, which fits in a u8")]
+        unsafe { std::mem::transmute(input as u8)}
+
     }
 }
 
