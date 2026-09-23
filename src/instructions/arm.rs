@@ -33,7 +33,7 @@ pub(crate) enum ArmCondition {
 
 impl ArmCondition {
     pub(crate) fn new(input: u32) -> Self {
-        //Should not allow for more than the 15 available options, and
+        //Should not allow for more than the 16 available options, and
         // assert will provide warning.
         debug_assert!(input < 0x10);
 
