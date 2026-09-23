@@ -12,7 +12,6 @@ pub(crate) struct ArmCommand {
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(u8)]
-#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmCondition {
     Equal,
     NotEqual,
@@ -34,20 +33,28 @@ pub(crate) enum ArmCondition {
 
 impl ArmCondition {
     pub(crate) fn new(input: u32) -> Self {
+        //Should not allow for more than the 15 available options, and
+        // assert will provide warning.
         debug_assert!(input < 0x10);
-        #[allow(
-            clippy::as_conversions,
-            reason = "input is restricted to less than 0x10, which fits in a u8"
-        )]
-        #[allow(
-            clippy::cast_possible_truncation,
-            reason = "input is restricted to less than 0x10, which fits in a u8"
-        )]
-        // SAFETY:
-        // input must be less than 0x10
-        //can now be infallibly converted to Armcondition
-        unsafe {
-            std::mem::transmute(input as u8)
+
+        match input & 0xF {
+            0x0 => ArmCondition::Equal,
+            0x1 => ArmCondition::NotEqual,
+            0x2 => ArmCondition::CarrySet,
+            0x3 => ArmCondition::CarryCleared,
+            0x4 => ArmCondition::Minus,
+            0x5 => ArmCondition::Plus,
+            0x6 => ArmCondition::SignedOverflow,
+            0x7 => ArmCondition::NoSignedOverflow,
+            0x8 => ArmCondition::UnsignedHigher,
+            0x9 => ArmCondition::UnsignedLowerOrSame,
+            0xA => ArmCondition::SignedGreaterEq,
+            0xB => ArmCondition::SignedLesser,
+            0xC => ArmCondition::SignedGreater,
+            0xD => ArmCondition::SignedLesserEq,
+            0xE => ArmCondition::Always,
+            0xF => ArmCondition::Never,
+            _ => unreachable!(),
         }
     }
 }
@@ -96,12 +103,6 @@ mod tests {
                 assert_eq!(ArmCondition::new(i), results_iter.next().unwrap());
             }
             assert_eq!(results_iter.next(), None);
-        }
-
-        #[test]
-        #[should_panic = "assertion failed: input < 0x10"]
-        fn debug_panics_on_value_outside_range() {
-            ArmCondition::new(0x10);
         }
     }
 }
