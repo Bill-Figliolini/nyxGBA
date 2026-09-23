@@ -44,6 +44,3 @@ dbg_macro = "warn"
 #slice safety
 string_slice = "warn"
 indexing_slicing = "warn"
-
-[dev-dependencies]
-tempdir = "0.3.7"

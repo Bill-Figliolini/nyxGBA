@@ -44,8 +44,7 @@ mod tests {
 
     #[test]
     fn errors_on_non_existent_file() {
-        let dir = tempdir::TempDir::new("gba-test").unwrap();
-        let path = dir.path().join("nonexistent");
+        let path = Path::new("arbitrary/path");
         let mut rom = Rom::initialize();
 
         let result = rom.load_rom(path);
