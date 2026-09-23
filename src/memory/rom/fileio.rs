@@ -24,7 +24,11 @@ impl Rom {
         let mut file =
             File::open(path).with_context(|| format!("Error opening file: {}", path.display()))?;
         self.memory.clear();
-        file.read(&mut self.memory)
+        #[allow(
+            clippy::verbose_file_reads,
+            reason = "No reason to reallocate the buffer"
+        )]
+        file.read_to_end(&mut self.memory)
             .with_context(|| format!("Error reading ROM from path: {}", path.display()))?;
         Ok(())
     }
@@ -50,5 +54,14 @@ mod tests {
         let result = rom.load_rom(path);
 
         assert!(result.is_err());
+    }
+    #[test]
+    fn opens_file() {
+        let path = Path::new("./test-data/suite.gba");
+        let mut rom = Rom::initialize();
+
+        rom.load_rom(path).unwrap();
+
+        assert_eq!(rom.read8(0), 0x2E00);
     }
 }
