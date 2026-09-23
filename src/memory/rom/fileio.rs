@@ -62,6 +62,6 @@ mod tests {
 
         rom.load_rom(path).unwrap();
 
-        assert_eq!(rom.read8(0), 0x2E00);
+        assert_eq!(rom.read8(0), 0x2E);
     }
 }
