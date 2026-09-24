@@ -11,7 +11,6 @@ pub(crate) struct Rom {
     memory: Vec<u8>,
 }
 
-
 const GAMEPAKSIZE: usize = 0x0A00_0000 - 0x0800_0000;
 
 impl Rom {
@@ -39,13 +38,16 @@ impl Rom {
         let mut range = match self.memory.get(addr..=addr.strict_add(width)) {
             Some(val) => val,
             None => &[0],
-        }.iter();
-        let mut array: [u8; 4] = [0,0,0,0];
+        }
+        .iter();
+        let mut array: [u8; 4] = [0, 0, 0, 0];
         for i in 0..array.len() {
             match array.get_mut(i) {
-                Some(val) => if let Some(mem) = range.next() {
-                    *val = *mem;
-                },
+                Some(val) => {
+                    if let Some(mem) = range.next() {
+                        *val = *mem;
+                    }
+                }
                 None => unreachable!(),
             }
         }
