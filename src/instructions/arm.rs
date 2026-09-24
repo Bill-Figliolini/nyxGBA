@@ -57,6 +57,27 @@ impl ArmCondition {
             _ => unreachable!(),
         }
     }
+    #[cfg_attr(not(test), expect(dead_code, reason = "For Testing Purposes"))]
+    fn get_options()-> Vec<Self> {
+        vec![
+            ArmCondition::Equal,
+            ArmCondition::NotEqual,
+            ArmCondition::CarrySet,
+            ArmCondition::CarryCleared,
+            ArmCondition::Minus,
+            ArmCondition::Plus,
+            ArmCondition::SignedOverflow,
+            ArmCondition::NoSignedOverflow,
+            ArmCondition::UnsignedHigher,
+            ArmCondition::UnsignedLowerOrSame,
+            ArmCondition::SignedGreaterEq,
+            ArmCondition::SignedLesser,
+            ArmCondition::SignedGreater,
+            ArmCondition::SignedLesserEq,
+            ArmCondition::Always,
+            ArmCondition::Never,
+        ]
+    }
 }
 
 #[derive(Debug)]
@@ -80,24 +101,7 @@ mod tests {
         use super::*;
         #[test]
         fn accepts_values_from_0_to_f() {
-            let results = vec![
-                ArmCondition::Equal,
-                ArmCondition::NotEqual,
-                ArmCondition::CarrySet,
-                ArmCondition::CarryCleared,
-                ArmCondition::Minus,
-                ArmCondition::Plus,
-                ArmCondition::SignedOverflow,
-                ArmCondition::NoSignedOverflow,
-                ArmCondition::UnsignedHigher,
-                ArmCondition::UnsignedLowerOrSame,
-                ArmCondition::SignedGreaterEq,
-                ArmCondition::SignedLesser,
-                ArmCondition::SignedGreater,
-                ArmCondition::SignedLesserEq,
-                ArmCondition::Always,
-                ArmCondition::Never,
-            ];
+            let results = ArmCondition::get_options();
             let mut results_iter = results.into_iter();
             for i in 0..0x10 {
                 assert_eq!(ArmCondition::new(i), results_iter.next().unwrap());
