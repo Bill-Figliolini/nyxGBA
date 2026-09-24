@@ -9,6 +9,22 @@ struct MemoryBus {
 #[derive(Debug, Clone, Copy)]
 struct Address(pub u32);
 
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum BusWidth {
+    B8,
+    B16,
+    B32,
+}
+impl BusWidth {
+    pub(crate) fn vec_width(self) -> usize{
+        match self {
+            BusWidth::B8 => 0,
+            BusWidth::B16 => 1,
+            BusWidth::B32 => 3,
+        }
+    }
+}
+
 impl MemoryBus {
     fn read(&mut self, address: Address) -> u32 {
         self.counter = 0;

@@ -1,6 +1,6 @@
 use std::{path::Path, process::abort};
 
-use crate::{bitmanip::Bitfield, memory::rom::Rom};
+use crate::{bitmanip::Bitfield, memory::{bus::BusWidth, rom::Rom}};
 
 mod bitmanip;
 mod clock;
@@ -18,6 +18,6 @@ pub fn nyx_main() {
     let path = Path::new("./test-data/suite.gba");
     let mut rom = Rom::initialize();
     let Ok(()) = rom.load_rom(path) else { abort() };
-    let result = rom.read8(0);
+    let result = rom.read(0, BusWidth::B8);
     println!("{result}");
 }
