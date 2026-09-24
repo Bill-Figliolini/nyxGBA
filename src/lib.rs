@@ -9,7 +9,7 @@ mod helpers;
 mod instructions;
 mod memory;
 
-#[cfg(not(any(target_pointer_width = "32", target_pointer_width = "64")))]
+#[cfg(target_pointer_width = "16")]
 compile_error!("Only 32-bit and 64-bit architectures supported");
 pub fn nyx_main() {
     let mut cpu = cpu::startup();
