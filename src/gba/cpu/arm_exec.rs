@@ -1,4 +1,4 @@
-use crate::{
+use crate::gba::{
     cpu::cpu_impl::Cpu,
     instructions::arm::{ArmCommand, ArmOpCode, SourceOperand},
 };
@@ -66,7 +66,7 @@ impl Cpu {
 mod tests {
     use super::*;
     mod add {
-        use crate::{cpu::Register, instructions::Instruction};
+        use crate::gba::{cpu::Register, instructions::{self, Instruction}};
 
         use super::*;
 
@@ -77,7 +77,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Always,
+                condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -98,7 +98,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, 0);
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Always,
+                condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -118,7 +118,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Always,
+                condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -138,7 +138,7 @@ mod tests {
             let val: i32 = -1;
             cpu.write(reg, val.cast_unsigned());
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Always,
+                condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
@@ -157,7 +157,7 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
             let instr = Instruction::Arm(ArmCommand {
-                condition: crate::instructions::arm::ArmCondition::Always,
+                condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,

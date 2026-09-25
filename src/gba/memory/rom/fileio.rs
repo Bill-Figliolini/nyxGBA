@@ -5,7 +5,7 @@ use std::{fs::File, io::Read, path::Path};
 
 use anyhow::Context;
 
-use crate::{helpers::u32_to_usize, memory::bus::BusWidth};
+use crate::gba::{memory::bus::BusWidth, helpers::u32_to_usize};
 
 pub(crate) struct Rom {
     memory: Vec<u8>,

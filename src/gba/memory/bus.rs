@@ -1,6 +1,6 @@
 #![expect(dead_code, reason = "Work in progress module")]
 
-use crate::memory::rom::Rom;
+use super::rom::Rom;
 
 struct MemoryBus {
     rom: Rom,

@@ -1,6 +1,6 @@
 use std::ops::{Index, IndexMut};
 
-use crate::{
+use crate::gba::{
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
     instructions::Instruction::{self, Arm},
 };
@@ -11,6 +11,9 @@ pub(crate) struct Cpu {
     pub(super) cpsr: CurrentProgramStatusRegister,
 }
 
+pub(crate) fn startup() -> Cpu {
+    Cpu::new()
+}
 impl Cpu {
     //TODO: add static function for initial values,
     // and reset function to quickly restart
@@ -20,7 +23,7 @@ impl Cpu {
             cpsr: CurrentProgramStatusRegister::new(),
         }
     }
-    pub fn step(&mut self, instruction: Instruction) {
+    pub(in crate::gba) fn step(&mut self, instruction: Instruction) {
         let Arm(arm_instr) = instruction;
         self.run_arm(arm_instr);
     }
@@ -47,7 +50,7 @@ mod tests {
         use super::*;
         mod arm {
             use super::*;
-            use crate::instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand};
+            use crate::gba::instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand};
             #[test]
             fn mov_sets_register_value_with_immediate() {
                 let mut cpu = Cpu::new();

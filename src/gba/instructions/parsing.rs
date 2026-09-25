@@ -2,11 +2,13 @@
 //! parses generated bitfields into their relevant instructions
 
 use crate::{
-    bitmanip::Bitfield,
-    cpu::Register,
-    instructions::{
-        Instruction::{self},
-        arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
+    gba::{
+        bitmanip::Bitfield,
+        cpu::Register,
+        instructions::{
+            Instruction::{self},
+            arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
+        },
     },
 };
 

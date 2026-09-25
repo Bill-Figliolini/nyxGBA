@@ -1,4 +1,4 @@
-use crate::instructions::arm::ArmCommand;
+use super::instructions::arm::ArmCommand;
 pub(crate) mod arm;
 pub(crate) mod parsing;
 

@@ -1,4 +1,4 @@
-use crate::cpu::Register;
+use crate::gba::cpu::Register;
 
 #[derive(Debug)]
 #[expect(dead_code, reason = "To be used later")]
