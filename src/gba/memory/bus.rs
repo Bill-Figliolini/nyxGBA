@@ -1,9 +1,11 @@
 #![expect(dead_code, reason = "Work in progress module")]
 
+use std::path::Path;
+
 use super::rom::Rom;
 
-struct MemoryBus {
-    rom: Rom,
+pub(in crate::gba) struct MemoryBus {
+    pub rom: Rom,
     counter: u32,
 }
 #[derive(Debug, Clone, Copy)]
@@ -26,6 +28,15 @@ impl BusWidth {
 }
 
 impl MemoryBus {
+    pub(in crate::gba) fn startup() -> Self {
+        Self {
+            rom: Rom::initialize(),
+            counter: 0,
+        }
+    }
+    pub(in crate::gba) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
+        self.rom.load_rom(path)
+    }
     fn read(&mut self, address: Address) -> u32 {
         self.counter = 0;
         match address.0 {

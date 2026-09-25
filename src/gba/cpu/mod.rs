@@ -1,7 +1,9 @@
-pub(crate) use {registers::Register, cpu_impl::{startup, Cpu}};
+pub(crate) use {
+    cpu_impl::{Cpu, startup},
+    registers::Register,
+};
 
 mod arm_exec;
 mod cpu_impl;
 mod flags;
 mod registers;
-

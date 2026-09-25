@@ -66,7 +66,10 @@ impl Cpu {
 mod tests {
     use super::*;
     mod add {
-        use crate::gba::{cpu::Register, instructions::{self, Instruction}};
+        use crate::gba::{
+            cpu::Register,
+            instructions::{self, Instruction},
+        };
 
         use super::*;
 

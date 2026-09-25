@@ -50,7 +50,9 @@ mod tests {
         use super::*;
         mod arm {
             use super::*;
-            use crate::gba::instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand};
+            use crate::gba::instructions::arm::{
+                ArmCommand, ArmCondition, ArmOpCode, SourceOperand,
+            };
             #[test]
             fn mov_sets_register_value_with_immediate() {
                 let mut cpu = Cpu::new();
