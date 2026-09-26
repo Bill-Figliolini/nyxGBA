@@ -1,8 +1,7 @@
 use std::ops::{Index, IndexMut};
 
 use crate::gba::{
-    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
-    instructions::Instruction::{self, Arm},
+    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers}, instructions::{Instruction::{self, Arm}, arm::ArmCondition},
 };
 
 #[derive(Debug)]
@@ -22,6 +21,52 @@ impl Cpu {
     }
     pub(in crate::gba) fn step(&mut self, instruction: Instruction) {
         let Arm(arm_instr) = instruction;
+        match arm_instr.condition {
+            ArmCondition::Equal => if !self.cpsr.get_zero_flag() {
+                return;
+            },
+            ArmCondition::NotEqual => if self.cpsr.get_zero_flag() {
+                return;
+            },
+            ArmCondition::CarrySet => if !self.cpsr.get_carry_flag() {
+                return;
+            },
+            ArmCondition::CarryCleared => if self.cpsr.get_carry_flag() {
+                return;
+            },
+            ArmCondition::Minus => if !self.cpsr.get_signed_flag() {
+                return;
+            },
+            ArmCondition::Plus => if self.cpsr.get_signed_flag() {
+                return;
+            },
+            ArmCondition::SignedOverflow => if !self.cpsr.get_overflow_flag() {
+                return;
+            },
+            ArmCondition::NoSignedOverflow => if self.cpsr.get_overflow_flag(){
+                return;
+            },
+            ArmCondition::UnsignedHigher => if !self.cpsr.get_carry_flag() || self.cpsr.get_zero_flag() {
+                return;
+            },
+            ArmCondition::UnsignedLowerOrSame => if self.cpsr.get_carry_flag() && !self.cpsr.get_zero_flag() {
+                return;
+            },
+            ArmCondition::SignedGreaterEq => if self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag() {
+                return;
+            },
+            ArmCondition::SignedLesser => if self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag() {
+                return;
+            },
+            ArmCondition::SignedGreater => if self.cpsr.get_zero_flag() || (self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag()){
+                return;
+            },
+            ArmCondition::SignedLesserEq => if self.cpsr.get_zero_flag() && (self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag()) {
+                return;
+            },
+            ArmCondition::Always => {},
+            ArmCondition::Never => return,
+        }
         self.run_arm(arm_instr);
     }
     pub(super) fn read(&self, reg: Register) -> u32 {

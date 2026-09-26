@@ -3,7 +3,6 @@ use crate::gba::bitmanip::Bitfield;
 #[derive(Debug, Clone, Copy)]
 pub(in crate::gba::cpu) struct CurrentProgramStatusRegister(Bitfield);
 
-#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 impl CurrentProgramStatusRegister {
     pub(crate) fn new() -> Self {
         Self(Bitfield::new(0))

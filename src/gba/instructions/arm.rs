@@ -1,7 +1,6 @@
 use crate::gba::cpu::Register;
 
 #[derive(Debug)]
-#[expect(dead_code, reason = "To be used later")]
 pub(crate) struct ArmCommand {
     pub condition: ArmCondition,
     pub op_code: ArmOpCode,
