@@ -3,7 +3,7 @@
 
 use std::{fs::File, io::Read, path::Path};
 
-use anyhow::Context;
+use anyhow::{Context, anyhow};
 
 use crate::gba::{helpers::u32_to_usize, memory::bus::BusWidth};
 
@@ -23,6 +23,12 @@ impl Rom {
         let path = path.as_ref();
         let mut file =
             File::open(path).with_context(|| format!("Error opening file: {}", path.display()))?;
+        let file_size = usize::try_from(file.metadata()?.len())?;
+
+        if file_size > GAMEPAKSIZE {
+            return Err(anyhow!("File too large to be a GBA ROM"));
+        }
+
         self.memory.clear();
         #[allow(
             clippy::verbose_file_reads,
