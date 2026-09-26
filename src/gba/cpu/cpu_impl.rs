@@ -1,7 +1,11 @@
 use std::ops::{Index, IndexMut};
 
 use crate::gba::{
-    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers}, instructions::{Instruction::{self, Arm}, arm::ArmCondition},
+    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
+    instructions::{
+        Instruction::{self, Arm},
+        arm::ArmCondition,
+    },
 };
 
 #[derive(Debug)]
@@ -11,8 +15,6 @@ pub(crate) struct Cpu {
 }
 
 impl Cpu {
-    //TODO: add static function for initial values,
-    // and reset function to quickly restart
     pub fn startup() -> Self {
         Cpu {
             registers: Registers::new(),
@@ -21,51 +23,8 @@ impl Cpu {
     }
     pub(in crate::gba) fn step(&mut self, instruction: Instruction) {
         let Arm(arm_instr) = instruction;
-        match arm_instr.condition {
-            ArmCondition::Equal => if !self.cpsr.get_zero_flag() {
-                return;
-            },
-            ArmCondition::NotEqual => if self.cpsr.get_zero_flag() {
-                return;
-            },
-            ArmCondition::CarrySet => if !self.cpsr.get_carry_flag() {
-                return;
-            },
-            ArmCondition::CarryCleared => if self.cpsr.get_carry_flag() {
-                return;
-            },
-            ArmCondition::Minus => if !self.cpsr.get_signed_flag() {
-                return;
-            },
-            ArmCondition::Plus => if self.cpsr.get_signed_flag() {
-                return;
-            },
-            ArmCondition::SignedOverflow => if !self.cpsr.get_overflow_flag() {
-                return;
-            },
-            ArmCondition::NoSignedOverflow => if self.cpsr.get_overflow_flag(){
-                return;
-            },
-            ArmCondition::UnsignedHigher => if !self.cpsr.get_carry_flag() || self.cpsr.get_zero_flag() {
-                return;
-            },
-            ArmCondition::UnsignedLowerOrSame => if self.cpsr.get_carry_flag() && !self.cpsr.get_zero_flag() {
-                return;
-            },
-            ArmCondition::SignedGreaterEq => if self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag() {
-                return;
-            },
-            ArmCondition::SignedLesser => if self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag() {
-                return;
-            },
-            ArmCondition::SignedGreater => if self.cpsr.get_zero_flag() || (self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag()){
-                return;
-            },
-            ArmCondition::SignedLesserEq => if self.cpsr.get_zero_flag() && (self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag()) {
-                return;
-            },
-            ArmCondition::Always => {},
-            ArmCondition::Never => return,
+        if !self.check(arm_instr.condition) {
+            return;
         }
         self.run_arm(arm_instr);
     }
@@ -81,6 +40,41 @@ impl Cpu {
             // TODO: Flush Precache pipeline when added
         }
         *self.registers.index_mut(reg) = value;
+    }
+
+    fn check(&self, condition: ArmCondition) -> bool {
+        match condition {
+            ArmCondition::Equal => self.cpsr.get_zero_flag(),
+            ArmCondition::NotEqual => !self.cpsr.get_zero_flag(),
+            ArmCondition::CarrySet => self.cpsr.get_carry_flag(),
+            ArmCondition::CarryCleared => !self.cpsr.get_carry_flag(),
+            ArmCondition::Minus => self.cpsr.get_signed_flag(),
+            ArmCondition::Plus => !self.cpsr.get_signed_flag(),
+            ArmCondition::SignedOverflow => self.cpsr.get_overflow_flag(),
+            ArmCondition::NoSignedOverflow => !self.cpsr.get_overflow_flag(),
+            ArmCondition::UnsignedHigher => {
+                self.cpsr.get_carry_flag() && !self.cpsr.get_zero_flag()
+            }
+            ArmCondition::UnsignedLowerOrSame => {
+                !self.cpsr.get_carry_flag() || self.cpsr.get_zero_flag()
+            }
+            ArmCondition::SignedGreaterEq => {
+                self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag()
+            }
+            ArmCondition::SignedLesser => {
+                self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag()
+            }
+            ArmCondition::SignedGreater => {
+                !self.cpsr.get_zero_flag()
+                    && (self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag())
+            }
+            ArmCondition::SignedLesserEq => {
+                self.cpsr.get_zero_flag()
+                    || (self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag())
+            }
+            ArmCondition::Always => true,
+            ArmCondition::Never => false,
+        }
     }
 }
 
@@ -139,6 +133,289 @@ mod tests {
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
+            }
+
+            mod check_conditions {
+                use super::*;
+                fn build_cpu(cpsr: CurrentProgramStatusRegister) -> Cpu {
+                    Cpu {
+                        registers: Registers::new(),
+                        cpsr,
+                    }
+                }
+                //Simple Cases
+                #[test]
+                fn equal() {
+                    let condition = ArmCondition::Equal;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn not_equal() {
+                    let condition = ArmCondition::NotEqual;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn carry_set() {
+                    let condition = ArmCondition::CarrySet;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, true, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn carry_cleared() {
+                    let condition = ArmCondition::CarryCleared;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, true, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn minus() {
+                    let condition = ArmCondition::Minus;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn positive() {
+                    let condition = ArmCondition::Plus;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn signed_overflow() {
+                    let condition = ArmCondition::SignedOverflow;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn no_signed_overflow() {
+                    let condition = ArmCondition::NoSignedOverflow;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn always() {
+                    let condition = ArmCondition::Always;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                }
+
+                #[test]
+                fn never() {
+                    let condition = ArmCondition::Never;
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+
+                    assert!(!false_case.check(condition));
+                }
+
+                //complex cases
+                #[test]
+                fn unsigned_higher() {
+                    let condition = ArmCondition::UnsignedHigher;
+                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, true, false,
+                    ));
+                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, true, false,
+                    ));
+                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+
+                    assert!(true_case.check(condition));
+                    assert!(!false_case_1.check(condition));
+                    assert!(!false_case_2.check(condition));
+                }
+
+                #[test]
+                fn unsigned_lower_or_same() {
+                    let condition = ArmCondition::UnsignedLowerOrSame;
+                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, true, false,
+                    ));
+                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let true_case_3 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, false, false,
+                    ));
+                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, true, false,
+                    ));
+
+                    assert!(true_case_1.check(condition));
+                    assert!(true_case_2.check(condition));
+                    assert!(true_case_3.check(condition));
+                    assert!(!false_case.check(condition));
+                }
+
+                #[test]
+                fn signed_greater_eq() {
+                    let condition = ArmCondition::SignedGreaterEq;
+                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let true_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, true,
+                    ));
+                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+
+                    assert!(true_case_pos.check(condition));
+                    assert!(true_case_neg.check(condition));
+                    assert!(!false_case_1.check(condition));
+                    assert!(!false_case_2.check(condition));
+                }
+
+                #[test]
+                fn signed_lesser() {
+                    let condition = ArmCondition::SignedLesser;
+                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, true,
+                    ));
+
+                    assert!(true_case_1.check(condition));
+                    assert!(true_case_2.check(condition));
+                    assert!(!false_case_pos.check(condition));
+                    assert!(!false_case_neg.check(condition));
+                }
+
+                #[test]
+                fn signed_greater() {
+                    let condition = ArmCondition::SignedGreater;
+                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let true_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, true,
+                    ));
+                    let false_case_zero = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, false, false,
+                    ));
+                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+
+                    assert!(true_case_pos.check(condition));
+                    assert!(true_case_neg.check(condition));
+                    assert!(!false_case_zero.check(condition));
+                    assert!(!false_case_1.check(condition));
+                    assert!(!false_case_2.check(condition));
+                }
+
+                #[test]
+                fn signed_lesser_eq() {
+                    let condition = ArmCondition::SignedLesserEq;
+                    let true_case_zero = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, true, false, false,
+                    ));
+                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, true,
+                    ));
+                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, false,
+                    ));
+                    let true_case_3 = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, true, false, false,
+                    ));
+                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
+                        false, false, false, false,
+                    ));
+                    let false_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
+                        true, false, false, true,
+                    ));
+
+                    assert!(true_case_zero.check(condition));
+                    assert!(true_case_1.check(condition));
+                    assert!(true_case_2.check(condition));
+                    assert!(true_case_3.check(condition));
+                    assert!(!false_case_pos.check(condition));
+                    assert!(!false_case_neg.check(condition));
+                }
             }
         }
     }

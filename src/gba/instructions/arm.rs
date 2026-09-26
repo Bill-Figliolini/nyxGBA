@@ -57,7 +57,7 @@ impl ArmCondition {
         }
     }
     #[cfg_attr(not(test), expect(dead_code, reason = "For Testing Purposes"))]
-    fn get_options() -> Vec<Self> {
+    pub(crate) fn get_options() -> Vec<Self> {
         vec![
             ArmCondition::Equal,
             ArmCondition::NotEqual,

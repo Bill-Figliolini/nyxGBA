@@ -8,6 +8,17 @@ impl CurrentProgramStatusRegister {
         Self(Bitfield::new(0))
     }
 
+    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
+    #[allow(clippy::fn_params_excessive_bools, reason = "Testing purposes")]
+    pub(crate) fn with_values(signed: bool, zero: bool, carry: bool, overflow: bool) -> Self {
+        let mut flags = Self(Bitfield::new(0));
+        flags.set_signed_flag(signed);
+        flags.set_zero_flag(zero);
+        flags.set_carry_flag(carry);
+        flags.set_overflow_flag(overflow);
+        flags
+    }
+
     // order, from highest bit to lowest:
     // signed
     // zero
