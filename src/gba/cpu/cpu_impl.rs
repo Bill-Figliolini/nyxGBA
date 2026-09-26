@@ -11,13 +11,10 @@ pub(crate) struct Cpu {
     pub(super) cpsr: CurrentProgramStatusRegister,
 }
 
-pub(crate) fn startup() -> Cpu {
-    Cpu::new()
-}
 impl Cpu {
     //TODO: add static function for initial values,
     // and reset function to quickly restart
-    pub fn new() -> Self {
+    pub fn startup() -> Self {
         Cpu {
             registers: Registers::new(),
             cpsr: CurrentProgramStatusRegister::new(),
@@ -55,7 +52,7 @@ mod tests {
             };
             #[test]
             fn mov_sets_register_value_with_immediate() {
-                let mut cpu = Cpu::new();
+                let mut cpu = Cpu::startup();
                 let register = Register::R0;
                 let read_reg = Register::R1;
                 let value = 10;
@@ -77,7 +74,7 @@ mod tests {
             }
             #[test]
             fn mov_sets_register_with_pointed_register() {
-                let mut cpu = Cpu::new();
+                let mut cpu = Cpu::startup();
                 let register = Register::R1;
                 let read_reg = Register::R3;
                 let write_reg = Register::R2;

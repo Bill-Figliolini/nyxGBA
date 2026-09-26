@@ -2,7 +2,7 @@ use std::{path::Path, process::abort};
 
 use crate::gba::{
     bitmanip::Bitfield,
-    cpu::{Cpu, startup},
+    cpu::Cpu,
     instructions,
     memory::{MemoryBus, bus::BusWidth},
 };
@@ -15,7 +15,7 @@ pub(crate) struct Gba {
 impl Gba {
     pub(crate) fn startup() -> Self {
         Self {
-            cpu: startup(),
+            cpu: Cpu::startup(),
             memory: MemoryBus::startup(),
         }
     }

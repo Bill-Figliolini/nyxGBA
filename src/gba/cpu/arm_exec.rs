@@ -75,7 +75,7 @@ mod tests {
 
         #[test]
         fn carry_flag_set_on_overflow() {
-            let mut cpu = Cpu::new();
+            let mut cpu = Cpu::startup();
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
@@ -96,7 +96,7 @@ mod tests {
 
         #[test]
         fn set_flag_on_zero() {
-            let mut cpu = Cpu::new();
+            let mut cpu = Cpu::startup();
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0);
@@ -116,7 +116,7 @@ mod tests {
         }
         #[test]
         fn set_overflow_flag_on_signed_overflow() {
-            let mut cpu = Cpu::new();
+            let mut cpu = Cpu::startup();
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
@@ -135,7 +135,7 @@ mod tests {
         }
         #[test]
         fn do_not_set_overflow_flag_on_negative_addition() {
-            let mut cpu = Cpu::new();
+            let mut cpu = Cpu::startup();
             let dest = Register::R1;
             let reg = Register::R0;
             let val: i32 = -1;
@@ -155,7 +155,7 @@ mod tests {
         }
         #[test]
         fn set_overflow_flag_on_overflow() {
-            let mut cpu = Cpu::new();
+            let mut cpu = Cpu::startup();
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
