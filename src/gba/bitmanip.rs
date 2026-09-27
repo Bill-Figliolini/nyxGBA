@@ -20,17 +20,11 @@ impl Bitfield {
         self.0 = (self.0 & !(1 << index)) | (val << index);
     }
 
-    pub(crate) fn get_range(self, start: u32, end: u32) -> u32 {
-        debug_assert!(end < 32);
-        debug_assert!(start < end);
-        let mut subfield = Self::new(0);
-        for i in start..=end {
-            subfield.set_field(i, self.get_field(i));
-        }
-        subfield.raw().strict_shr(start)
-    }
-    fn raw(self) -> u32 {
-        self.0
+    pub(crate) fn get_range(self, start: u32, length: u32) -> u32 {
+        debug_assert!(length != 0);
+        debug_assert!(start.strict_add(length) <= 32);
+        let bits: u32 = 32;
+        (self.0.strict_shr(start)) & (u32::MAX.strict_shr(bits.strict_sub(length)))
     }
 }
 
@@ -71,7 +65,7 @@ mod tests {
     fn gets_range() {
         let bitfield = Bitfield::new(u32::MAX);
 
-        let result = bitfield.get_range(0, 3);
+        let result = bitfield.get_range(0, 4);
 
         assert_eq!(result, 15);
     }
@@ -80,8 +74,16 @@ mod tests {
     fn gets_range_and_shifts_to_base() {
         let bitfield = Bitfield::new(u32::MAX);
 
-        let result = bitfield.get_range(6, 9);
+        let result = bitfield.get_range(6, 4);
 
         assert_eq!(result, 15);
+    }
+    #[test]
+    fn full_width_returns_underlying() {
+        let bitfield = Bitfield::new(u32::MAX);
+
+        let result = bitfield.get_range(0, 32);
+
+        assert_eq!(result, u32::MAX);
     }
 }
