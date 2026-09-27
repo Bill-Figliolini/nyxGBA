@@ -34,7 +34,8 @@ impl Cpu {
     }
     pub(super) fn read(&self, reg: Register) -> u32 {
         if let Register::R15 = reg {
-            self.registers.index(reg).overflowing_add(8).0
+            let program_count_step = 8;
+            self.registers.index(reg).wrapping_add(program_count_step)
         } else {
             *self.registers.index(reg)
         }
