@@ -18,11 +18,11 @@ pub(crate) enum BusWidth {
     B32,
 }
 impl BusWidth {
-    pub(crate) fn vec_width(self) -> usize {
+    pub(crate) fn byte_size(self) -> usize {
         match self {
-            BusWidth::B8 => 0,
-            BusWidth::B16 => 1,
-            BusWidth::B32 => 3,
+            BusWidth::B8 => 1,
+            BusWidth::B16 => 2,
+            BusWidth::B32 => 4,
         }
     }
 }

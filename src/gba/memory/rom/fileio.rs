@@ -45,22 +45,11 @@ impl Rom {
     }
     pub(crate) fn read(&self, addr: u32, width: BusWidth) -> u32 {
         let addr = u32_to_usize(addr);
-        let width = width.vec_width();
-        let mut range = match self.memory.get(addr..=addr.strict_add(width)) {
-            Some(val) => val,
-            None => &[0],
-        }
-        .iter();
+        let width = width.byte_size();
+        let range = self.memory.iter().skip(addr).take(width);
         let mut array: [u8; 4] = [0, 0, 0, 0];
-        for i in 0..array.len() {
-            match array.get_mut(i) {
-                Some(val) => {
-                    if let Some(mem) = range.next() {
-                        *val = *mem;
-                    }
-                }
-                None => unreachable!(),
-            }
+        for (dest, source) in array.iter_mut().zip(range) {
+            *dest = *source;
         }
         u32::from_le_bytes(array)
     }
