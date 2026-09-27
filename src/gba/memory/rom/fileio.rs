@@ -19,11 +19,16 @@ impl Rom {
             memory: Vec::with_capacity(GAMEPAKSIZE),
         }
     }
+    //TODO: Handle misaligned reads and determine a suitable open-bus descision.
     pub(crate) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         let path = path.as_ref();
         let mut file =
             File::open(path).with_context(|| format!("Error opening file: {}", path.display()))?;
-        let file_size = usize::try_from(file.metadata()?.len())?;
+        let file_size = usize::try_from(
+            file.metadata()
+                .with_context(|| format!("Error opening File Metadata for: {}", path.display()))?
+                .len(),
+        )?;
 
         if file_size > GAMEPAKSIZE {
             return Err(anyhow!("File too large to be a GBA ROM"));
