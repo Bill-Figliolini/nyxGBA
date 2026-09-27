@@ -18,6 +18,9 @@ impl CurrentProgramStatusRegister {
         flags.set_overflow_flag(overflow);
         flags
     }
+    pub(crate) fn reset(&mut self) {
+        self.0.set_val(0);
+    }
 
     // order, from highest bit to lowest:
     // signed

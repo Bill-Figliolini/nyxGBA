@@ -19,6 +19,9 @@ impl Gba {
             memory: MemoryBus::startup(),
         }
     }
+    pub(crate) fn reset(&mut self) {
+        self.cpu.reset();
+    }
     pub(crate) fn run(&mut self) {
         let instruction = instructions::parse(Bitfield::new(0));
         self.cpu.step(instruction);

@@ -30,8 +30,15 @@ pub(super) struct Registers {
 impl Registers {
     pub(super) fn new() -> Self {
         Registers {
-            general_purpose: [0; 16],
+            general_purpose: Registers::initial_values(),
         }
+    }
+    pub(crate) fn reset(&mut self) {
+        self.general_purpose = Registers::initial_values();
+    }
+
+    fn initial_values() -> [u32; 16] {
+        [0; 16]
     }
 }
 impl Index<Register> for Registers {

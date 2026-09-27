@@ -15,11 +15,15 @@ pub(crate) struct Cpu {
 }
 
 impl Cpu {
-    pub fn startup() -> Self {
+    pub(crate) fn startup() -> Self {
         Cpu {
             registers: Registers::new(),
             cpsr: CurrentProgramStatusRegister::new(),
         }
+    }
+    pub(crate) fn reset(&mut self) {
+        self.registers.reset();
+        self.cpsr.reset();
     }
     pub(in crate::gba) fn step(&mut self, instruction: Instruction) {
         let Arm(arm_instr) = instruction;

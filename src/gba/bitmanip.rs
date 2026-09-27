@@ -5,6 +5,11 @@ impl Bitfield {
     pub(crate) fn new(input: u32) -> Self {
         Self(input)
     }
+
+    pub(crate) fn set_val(&mut self, input: u32) {
+        self.0 = input;
+    }
+
     pub(crate) fn get_field(self, index: u32) -> bool {
         debug_assert!(index < 32);
         self.0 & (1 << index) != 0
