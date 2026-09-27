@@ -19,6 +19,13 @@ impl Rom {
             memory: Vec::with_capacity(GAMEPAKSIZE),
         }
     }
+
+    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
+    pub(crate) fn load_raw(&mut self, iter: impl Iterator<Item = u8>) {
+        self.memory.clear();
+        self.memory.extend(iter);
+    }
+
     //TODO: Handle misaligned reads and determine a suitable open-bus descision.
     pub(crate) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         let path = path.as_ref();
@@ -45,10 +52,15 @@ impl Rom {
     }
     pub(crate) fn read(&self, addr: u32, width: BusWidth) -> u32 {
         let addr = u32_to_usize(addr);
-        let width = width.byte_size();
+        let width = width.bytes();
+        eprintln!("width: {width}");
+        for test_val in self.memory.iter().skip(addr).take(width) {
+            eprintln!("test_val: {test_val}");
+        }
         let range = self.memory.iter().skip(addr).take(width);
         let mut array: [u8; 4] = [0, 0, 0, 0];
         for (dest, source) in array.iter_mut().zip(range) {
+            eprintln!("source: {source}");
             *dest = *source;
         }
         u32::from_le_bytes(array)

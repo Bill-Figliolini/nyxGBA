@@ -18,7 +18,7 @@ pub(crate) enum BusWidth {
     B32,
 }
 impl BusWidth {
-    pub(crate) fn byte_size(self) -> usize {
+    pub(crate) fn bytes(self) -> usize {
         match self {
             BusWidth::B8 => 1,
             BusWidth::B16 => 2,
@@ -92,8 +92,8 @@ impl MemoryBus {
         0
     }
     fn gamepak_read(&mut self, address: Address, width: BusWidth, _waitstate: u32) -> u32 {
-        let offset: u32 = 0x0800_0000 & 0x01FF_FFFF;
-        let offset_address = address.0.strict_sub(offset);
+        let offset_address = address.0 & 0x01FF_FFFF;
+        eprintln!("{offset_address}");
         self.rom.read(offset_address, width)
     }
     fn gamepak_sram_read() -> u32 {
@@ -101,5 +101,84 @@ impl MemoryBus {
     }
     fn unused_read() -> u32 {
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    mod gamepak {
+        use super::*;
+
+        #[test]
+        fn gamepak_read_waitstates_read_same_memory() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0xAE];
+            let output_val: u32 = 0xAE;
+            bus.rom.load_raw(vals.iter().copied());
+
+            assert_eq!(
+                bus.gamepak_read(Address(0x0800_0000), BusWidth::B8, 0),
+                output_val,
+                "Waitstate 0 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B8, 1),
+                output_val,
+                "Waitstate 1 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B8, 2),
+                output_val,
+                "Waitstate 2 failed"
+            );
+        }
+
+        #[test]
+        fn gamepak_read_16b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x34, 0x12];
+            let output_val: u32 = 0x0000_1234;
+            bus.rom.load_raw(vals.iter().copied());
+
+            assert_eq!(
+                bus.gamepak_read(Address(0x0800_0000), BusWidth::B16, 0),
+                output_val,
+                "Waitstate 0 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B16, 1),
+                output_val,
+                "Waitstate 1 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B16, 2),
+                output_val,
+                "Waitstate 2 failed"
+            );
+        }
+        #[test]
+        fn gamepak_read_32b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
+            let output_val: u32 = 0x1234_5678;
+            bus.rom.load_raw(vals.iter().copied());
+
+            assert_eq!(
+                bus.gamepak_read(Address(0x0800_0000), BusWidth::B32, 0),
+                output_val,
+                "Waitstate 0 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B32, 1),
+                output_val,
+                "Waitstate 1 failed"
+            );
+            assert_eq!(
+                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B32, 2),
+                output_val,
+                "Waitstate 2 failed"
+            );
+        }
     }
 }
