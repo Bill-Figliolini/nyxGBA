@@ -35,6 +35,7 @@ unimplemented = "warn"
 clone_on_ref_ptr = "warn"
 verbose_file_reads = "warn"
 assertions_on_result_states = "warn"
+print_stderr = "warn"
 # Arithmetic safety
 arithmetic_side_effects = "warn"
 unchecked_time_subtraction = "warn"

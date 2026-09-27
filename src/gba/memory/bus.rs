@@ -93,7 +93,6 @@ impl MemoryBus {
     }
     fn gamepak_read(&mut self, address: Address, width: BusWidth, _waitstate: u32) -> u32 {
         let offset_address = address.0 & 0x01FF_FFFF;
-        eprintln!("{offset_address}");
         self.rom.read(offset_address, width)
     }
     fn gamepak_sram_read() -> u32 {
