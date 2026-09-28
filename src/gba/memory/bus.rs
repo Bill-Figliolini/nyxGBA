@@ -2,11 +2,12 @@
 
 use std::path::Path;
 
-use super::rom::Rom;
+use crate::gba::memory::{ram::Ram, rom::Rom};
 
 pub(in crate::gba) struct MemoryBus {
     pub rom: Rom,
-    counter: u32,
+    board_memory: Ram,
+    chip_memory: Ram,
 }
 #[derive(Debug, Clone, Copy)]
 struct Address(pub u32);
@@ -31,19 +32,19 @@ impl MemoryBus {
     pub(in crate::gba) fn startup() -> Self {
         Self {
             rom: Rom::initialize(),
-            counter: 0,
+            board_memory: Ram::initialize_on_board(),
+            chip_memory: Ram::initialize_on_chip(),
         }
     }
     pub(in crate::gba) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         self.rom.load_rom(path)
     }
     fn read(&mut self, address: Address, width: BusWidth) -> u32 {
-        self.counter = 0;
         match address.0 {
             //General
             0x0000_0000..=0x0000_3FFF => MemoryBus::bios_read(),
-            0x0200_0000..=0x0203_FFFF => MemoryBus::board_memory_read(),
-            0x0300_0000..=0x0300_7FFF => MemoryBus::chip_memory_read(),
+            0x0200_0000..=0x02FF_FFFF => self.board_memory_read(address, width),
+            0x0300_0000..=0x03FF_FFFF => self.chip_memory_read(address, width),
             0x0400_0000..=0x0400_03FE => MemoryBus::io_memory_read(),
 
             //Display
@@ -66,18 +67,19 @@ impl MemoryBus {
             _ => MemoryBus::unused_read(),
         }
     }
-    fn write(&mut self, _address: Address, _value: u32) {
-        self.counter = 0;
-    }
+    #[expect(clippy::unused_self, reason = "Write is still in progress")]
+    fn write(&mut self, _address: Address, _value: u32) {}
 
     fn bios_read() -> u32 {
         0
     }
-    fn board_memory_read() -> u32 {
-        0
+    fn board_memory_read(&self, address: Address, width: BusWidth) -> u32 {
+        let address = address.0 & 0x0003_FFFF;
+        self.board_memory.read(address, width)
     }
-    fn chip_memory_read() -> u32 {
-        0
+    fn chip_memory_read(&self, address: Address, width: BusWidth) -> u32 {
+        let address = address.0 & 0x0000_7FFF;
+        self.chip_memory.read(address, width)
     }
     fn io_memory_read() -> u32 {
         0
@@ -117,17 +119,17 @@ mod tests {
             bus.rom.load_raw(vals.iter().copied());
 
             assert_eq!(
-                bus.gamepak_read(Address(0x0800_0000), BusWidth::B8, 0),
+                bus.read(Address(0x0800_0000), BusWidth::B8),
                 output_val,
                 "Waitstate 0 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B8, 1),
+                bus.read(Address(0x0A00_0000), BusWidth::B8),
                 output_val,
                 "Waitstate 1 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B8, 2),
+                bus.read(Address(0x0C00_0000), BusWidth::B8),
                 output_val,
                 "Waitstate 2 failed"
             );
@@ -141,17 +143,17 @@ mod tests {
             bus.rom.load_raw(vals.iter().copied());
 
             assert_eq!(
-                bus.gamepak_read(Address(0x0800_0000), BusWidth::B16, 0),
+                bus.read(Address(0x0800_0000), BusWidth::B16),
                 output_val,
                 "Waitstate 0 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B16, 1),
+                bus.read(Address(0x0A00_0000), BusWidth::B16),
                 output_val,
                 "Waitstate 1 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B16, 2),
+                bus.read(Address(0x0C00_0000), BusWidth::B16),
                 output_val,
                 "Waitstate 2 failed"
             );
@@ -164,20 +166,81 @@ mod tests {
             bus.rom.load_raw(vals.iter().copied());
 
             assert_eq!(
-                bus.gamepak_read(Address(0x0800_0000), BusWidth::B32, 0),
+                bus.read(Address(0x0800_0000), BusWidth::B32),
                 output_val,
                 "Waitstate 0 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0A00_0000), BusWidth::B32, 1),
+                bus.read(Address(0x0A00_0000), BusWidth::B32),
                 output_val,
                 "Waitstate 1 failed"
             );
             assert_eq!(
-                bus.gamepak_read(Address(0x0C00_0000), BusWidth::B32, 2),
+                bus.read(Address(0x0C00_0000), BusWidth::B32),
                 output_val,
                 "Waitstate 2 failed"
             );
+        }
+    }
+    mod ram {
+        use super::*;
+        #[test]
+        fn board_memory_8b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0xAE];
+            let output_val: u32 = 0xAE;
+            bus.board_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0200_0000), BusWidth::B8), output_val);
+        }
+
+        #[test]
+        fn chip_memory_8b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0xAE];
+            let output_val: u32 = 0xAE;
+            bus.chip_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0300_0000), BusWidth::B8), output_val);
+        }
+
+        #[test]
+        fn board_memory_16b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x34, 0x12];
+            let output_val: u32 = 0x1234;
+            bus.board_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0200_0000), BusWidth::B16), output_val);
+        }
+
+        #[test]
+        fn chip_memory_16b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x34, 0x12];
+            let output_val: u32 = 0x1234;
+            bus.chip_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0300_0000), BusWidth::B16), output_val);
+        }
+        #[test]
+        fn board_memory_32b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
+            let output_val: u32 = 0x1234_5678;
+            bus.board_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0200_0000), BusWidth::B32), output_val);
+        }
+
+        #[test]
+        fn chip_memory_32b() {
+            let mut bus = MemoryBus::startup();
+            let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
+            let output_val: u32 = 0x1234_5678;
+            bus.chip_memory.load_raw(vals.iter().copied());
+
+            assert_eq!(bus.read(Address(0x0300_0000), BusWidth::B32), output_val);
         }
     }
 }

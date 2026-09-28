@@ -1,7 +1,5 @@
 pub(crate) mod bus;
+pub(in crate::gba::memory) mod helpers;
+pub(in crate::gba::memory) mod ram;
 pub(crate) mod rom;
-#[expect(
-    unused_imports,
-    reason = "Bus Width needed for Parsing, Memory Bus is interface to Memory"
-)]
 pub(in crate::gba) use bus::{BusWidth, MemoryBus};

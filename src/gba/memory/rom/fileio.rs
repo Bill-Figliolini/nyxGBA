@@ -5,7 +5,7 @@ use std::{fs::File, io::Read, path::Path};
 
 use anyhow::{Context, anyhow};
 
-use crate::gba::{helpers::u32_to_usize, memory::bus::BusWidth};
+use crate::gba::memory::{BusWidth, helpers::read_le_bytes};
 
 pub(crate) struct Rom {
     memory: Vec<u8>,
@@ -51,14 +51,7 @@ impl Rom {
         Ok(())
     }
     pub(crate) fn read(&self, addr: u32, width: BusWidth) -> u32 {
-        let addr = u32_to_usize(addr);
-        let width = width.bytes();
-        let range = self.memory.iter().skip(addr).take(width);
-        let mut array: [u8; 4] = [0, 0, 0, 0];
-        for (dest, source) in array.iter_mut().zip(range) {
-            *dest = *source;
-        }
-        u32::from_le_bytes(array)
+        read_le_bytes(&self.memory, addr, width)
     }
 }
 

@@ -4,7 +4,7 @@ use crate::gba::{
     bitmanip::Bitfield,
     cpu::Cpu,
     instructions,
-    memory::{MemoryBus, bus::BusWidth},
+    memory::{BusWidth, MemoryBus},
 };
 
 pub(crate) struct Gba {
