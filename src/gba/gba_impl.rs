@@ -24,7 +24,7 @@ impl Gba {
     }
     pub(crate) fn run(&mut self) {
         let instruction = instructions::parse(Bitfield::new(0));
-        self.cpu.step(instruction);
+        self.cpu.step(instruction, &mut self.memory);
         let path = Path::new("./test-data/suite.gba");
         let Ok(()) = self.memory.load_rom(path) else {
             abort()

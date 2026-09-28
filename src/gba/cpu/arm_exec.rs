@@ -69,6 +69,7 @@ mod tests {
         use crate::gba::{
             cpu::Register,
             instructions::{self, Instruction},
+            memory::TestBus,
         };
 
         use super::*;
@@ -76,6 +77,7 @@ mod tests {
         #[test]
         fn carry_flag_set_on_overflow() {
             let mut cpu = Cpu::startup();
+            let mut bus = TestBus::new(std::iter::empty());
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
@@ -88,7 +90,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.step(instr);
+            cpu.step(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_carry_flag());
@@ -97,6 +99,7 @@ mod tests {
         #[test]
         fn set_flag_on_zero() {
             let mut cpu = Cpu::startup();
+            let mut bus = TestBus::new(std::iter::empty());
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0);
@@ -109,7 +112,7 @@ mod tests {
                 source: SourceOperand::Immediate(0),
             });
 
-            cpu.step(instr);
+            cpu.step(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_zero_flag());
@@ -117,6 +120,7 @@ mod tests {
         #[test]
         fn set_overflow_flag_on_signed_overflow() {
             let mut cpu = Cpu::startup();
+            let mut bus = TestBus::new(std::iter::empty());
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
@@ -129,13 +133,14 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.step(instr);
+            cpu.step(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
         #[test]
         fn do_not_set_overflow_flag_on_negative_addition() {
             let mut cpu = Cpu::startup();
+            let mut bus = TestBus::new(std::iter::empty());
             let dest = Register::R1;
             let reg = Register::R0;
             let val: i32 = -1;
@@ -149,13 +154,14 @@ mod tests {
                 source: SourceOperand::Immediate(val.cast_unsigned()),
             });
 
-            cpu.step(instr);
+            cpu.step(instr, &mut bus);
 
             assert!(!cpu.cpsr.get_overflow_flag());
         }
         #[test]
         fn set_overflow_flag_on_overflow() {
             let mut cpu = Cpu::startup();
+            let mut bus = TestBus::new(std::iter::empty());
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
@@ -168,7 +174,7 @@ mod tests {
                 source: SourceOperand::Immediate(0x8000_0000),
             });
 
-            cpu.step(instr);
+            cpu.step(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }

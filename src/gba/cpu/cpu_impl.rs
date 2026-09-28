@@ -6,6 +6,7 @@ use crate::gba::{
         Instruction::{self, Arm},
         arm::ArmCondition,
     },
+    memory::Bus,
 };
 
 #[derive(Debug)]
@@ -25,7 +26,7 @@ impl Cpu {
         self.registers.reset();
         self.cpsr.reset();
     }
-    pub(in crate::gba) fn step(&mut self, instruction: Instruction) {
+    pub(in crate::gba) fn step(&mut self, instruction: Instruction, _bus: &mut impl Bus) {
         let Arm(arm_instr) = instruction;
         if !self.check(arm_instr.condition) {
             return;
@@ -91,12 +92,14 @@ mod tests {
         use super::*;
         mod arm {
             use super::*;
-            use crate::gba::instructions::arm::{
-                ArmCommand, ArmCondition, ArmOpCode, SourceOperand,
+            use crate::gba::{
+                instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
+                memory::TestBus,
             };
             #[test]
             fn mov_sets_register_value_with_immediate() {
                 let mut cpu = Cpu::startup();
+                let mut bus = TestBus::new(std::iter::empty());
                 let register = Register::R0;
                 let read_reg = Register::R1;
                 let value = 10;
@@ -111,7 +114,7 @@ mod tests {
                     source: operand,
                 });
 
-                cpu.step(instruction);
+                cpu.step(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
@@ -119,6 +122,7 @@ mod tests {
             #[test]
             fn mov_sets_register_with_pointed_register() {
                 let mut cpu = Cpu::startup();
+                let mut bus = TestBus::new(std::iter::empty());
                 let register = Register::R1;
                 let read_reg = Register::R3;
                 let write_reg = Register::R2;
@@ -134,7 +138,7 @@ mod tests {
                     read_reg,
                     source: operand,
                 });
-                cpu.step(instruction);
+                cpu.step(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
