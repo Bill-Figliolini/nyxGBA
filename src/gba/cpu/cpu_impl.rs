@@ -96,10 +96,13 @@ mod tests {
                 instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
                 memory::TestBus,
             };
+            fn make_test_bus() -> TestBus {
+                TestBus::new(vec![], vec![], vec![])
+            }
             #[test]
             fn mov_sets_register_value_with_immediate() {
                 let mut cpu = Cpu::startup();
-                let mut bus = TestBus::new(std::iter::empty());
+                let mut bus = make_test_bus();
                 let register = Register::R0;
                 let read_reg = Register::R1;
                 let value = 10;
@@ -122,7 +125,7 @@ mod tests {
             #[test]
             fn mov_sets_register_with_pointed_register() {
                 let mut cpu = Cpu::startup();
-                let mut bus = TestBus::new(std::iter::empty());
+                let mut bus = make_test_bus();
                 let register = Register::R1;
                 let read_reg = Register::R3;
                 let write_reg = Register::R2;

@@ -15,10 +15,10 @@ pub(in crate::gba) struct MemoryBus {
     board_memory: Ram,
     chip_memory: Ram,
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Address(pub u32);
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BusWidth {
     B8,
     B16,
@@ -36,7 +36,7 @@ impl BusWidth {
 
 pub(crate) trait Bus {
     fn read(&mut self, address: Address, width: BusWidth) -> Bitfield;
-    fn write(&mut self, address: Address, value: u32);
+    fn write(&mut self, address: Address, width: BusWidth, value: Bitfield);
 }
 
 impl MemoryBus {
@@ -118,7 +118,7 @@ impl Bus for MemoryBus {
         Bitfield::new(value)
     }
 
-    fn write(&mut self, _address: Address, _value: u32) {}
+    fn write(&mut self, _address: Address, _width: BusWidth, _value: Bitfield) {}
 }
 
 #[cfg(test)]

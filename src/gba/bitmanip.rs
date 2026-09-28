@@ -1,3 +1,5 @@
+use std::fmt::Display;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Bitfield(u32);
 
@@ -25,6 +27,11 @@ impl Bitfield {
         debug_assert!(start.strict_add(length) <= 32);
         let bits: u32 = 32;
         (self.0.strict_shr(start)) & (u32::MAX.strict_shr(bits.strict_sub(length)))
+    }
+}
+impl Display for Bitfield {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:#x}", self.0)
     }
 }
 
