@@ -2,7 +2,10 @@
 
 use std::path::Path;
 
-use crate::gba::memory::{ram::Ram, rom::Rom};
+use crate::gba::memory::{
+    ram::{ONBOARDRAMSIZE, ONCHIPRAMSIZE, Ram},
+    rom::Rom,
+};
 
 pub(in crate::gba) struct MemoryBus {
     pub rom: Rom,
@@ -74,11 +77,11 @@ impl MemoryBus {
         0
     }
     fn board_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & 0x0003_FFFF;
+        let address = address.0 & ONBOARDRAMSIZE.strict_sub(1);
         self.board_memory.read(address, width)
     }
     fn chip_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & 0x0000_7FFF;
+        let address = address.0 & ONCHIPRAMSIZE.strict_sub(1);
         self.chip_memory.read(address, width)
     }
     fn io_memory_read() -> u32 {

@@ -1,17 +1,20 @@
-use crate::gba::memory::{BusWidth, helpers::read_le_bytes};
+use crate::gba::memory::{
+    BusWidth,
+    helpers::{read_le_bytes, u32_to_usize},
+};
 pub(in crate::gba::memory) struct Ram {
     memory: Vec<u8>,
 }
 
-const ONCHIPRAMSIZE: usize = 0x8000;
-const ONBOARDRAMSIZE: usize = 0x4_0000;
+pub(in crate::gba::memory) const ONCHIPRAMSIZE: u32 = 0x8000;
+pub(in crate::gba::memory) const ONBOARDRAMSIZE: u32 = 0x4_0000;
 
 impl Ram {
     pub(in crate::gba::memory) fn initialize_on_chip() -> Self {
-        Ram::initialize(ONCHIPRAMSIZE)
+        Ram::initialize(u32_to_usize(ONCHIPRAMSIZE))
     }
     pub(in crate::gba::memory) fn initialize_on_board() -> Self {
-        Ram::initialize(ONBOARDRAMSIZE)
+        Ram::initialize(u32_to_usize(ONBOARDRAMSIZE))
     }
     fn initialize(size: usize) -> Self {
         Self {
