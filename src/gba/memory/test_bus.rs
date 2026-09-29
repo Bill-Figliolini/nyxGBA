@@ -62,8 +62,16 @@ impl Bus for TestBus {
 impl Drop for TestBus {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(self.read_inputs.is_empty(), "Insufficient Reads");
-            assert!(self.write_inputs.is_empty(), "Insufficient Reads");
+            assert!(
+                self.read_inputs.is_empty(),
+                "Insufficient Reads: {:?}",
+                self.read_inputs
+            );
+            assert!(
+                self.write_inputs.is_empty(),
+                "Insufficient Writes: {:?}",
+                self.write_inputs
+            );
         }
     }
 }
