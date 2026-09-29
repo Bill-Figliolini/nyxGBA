@@ -9,7 +9,6 @@ pub(crate) struct TestBus {
 }
 
 impl TestBus {
-    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
     pub(crate) fn new(
         read_inputs: Vec<(Address, BusWidth, Bitfield)>,
         write_inputs: Vec<(Address, BusWidth, Bitfield)>,
@@ -43,21 +42,20 @@ impl Bus for TestBus {
     }
 
     fn write(&mut self, address: Address, width: BusWidth, value: Bitfield) {
-        if let Some((expected_address, expected_width, expected_value)) = self.write_inputs.pop() {
-            if expected_address == address && expected_width == width && expected_value == value {
-            } else {
-                panic!(
-                    "Incorrect inputs: {:#x}, {}, {}. Expected: {:#x}, {}, {}",
-                    address.0,
-                    width.bytes(),
-                    value,
-                    expected_address.0,
-                    expected_width.bytes(),
-                    expected_value
-                )
-            }
+        if let Some(expected) = self.write_inputs.pop() {
+            assert_eq!(
+                expected,
+                (address, width, value),
+                "Incorrect inputs: {:#x}, {}, {}. Expected: {:#x}, {}, {}",
+                address.0,
+                width.bytes(),
+                value,
+                expected.0.0,
+                expected.1.bytes(),
+                expected.2
+            );
         } else {
-            panic!("More calls to read than Expected!");
+            panic!("More calls to write than Expected!");
         }
     }
 }
