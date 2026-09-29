@@ -5,7 +5,7 @@ use std::path::Path;
 use crate::gba::{
     bitmanip::Bitfield,
     memory::{
-        ram::{ONBOARDRAMSIZE, ONCHIPRAMSIZE, Ram},
+        ram::{ONBOARDRAMMASK, ONCHIPRAMMASK, Ram},
         rom::Rom,
     },
 };
@@ -55,11 +55,11 @@ impl MemoryBus {
         0
     }
     fn board_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & ONBOARDRAMSIZE.strict_sub(1);
+        let address = address.0 & ONBOARDRAMMASK;
         self.board_memory.read(address, width)
     }
     fn chip_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & ONCHIPRAMSIZE.strict_sub(1);
+        let address = address.0 & ONCHIPRAMMASK;
         self.chip_memory.read(address, width)
     }
     fn io_memory_read() -> u32 {

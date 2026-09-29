@@ -7,7 +7,9 @@ pub(in crate::gba::memory) struct Ram {
 }
 
 pub(in crate::gba::memory) const ONCHIPRAMSIZE: u32 = 0x8000;
+pub(in crate::gba::memory) const ONCHIPRAMMASK: u32 = ONCHIPRAMSIZE - 1;
 pub(in crate::gba::memory) const ONBOARDRAMSIZE: u32 = 0x4_0000;
+pub(in crate::gba::memory) const ONBOARDRAMMASK: u32 = ONBOARDRAMSIZE - 1;
 
 impl Ram {
     pub(in crate::gba::memory) fn initialize_on_chip() -> Self {
