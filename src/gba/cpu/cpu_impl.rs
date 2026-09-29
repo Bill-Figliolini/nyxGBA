@@ -97,7 +97,7 @@ mod tests {
                 memory::TestBus,
             };
             fn make_test_bus() -> TestBus {
-                TestBus::new(vec![], vec![], vec![])
+                TestBus::new(vec![], vec![])
             }
             #[test]
             fn mov_sets_register_value_with_immediate() {

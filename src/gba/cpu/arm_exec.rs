@@ -75,7 +75,7 @@ mod tests {
         use super::*;
 
         fn make_test_bus() -> TestBus {
-            TestBus::new(vec![], vec![], vec![])
+            TestBus::new(vec![], vec![])
         }
 
         #[test]
