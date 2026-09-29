@@ -25,17 +25,15 @@ impl TestBus {
 impl Bus for TestBus {
     fn read(&mut self, address: Address, width: BusWidth) -> Bitfield {
         if let Some((expected_address, expected_width, output)) = self.read_inputs.pop() {
-            if expected_address == address && expected_width == width {
-                output
-            } else {
-                panic!(
-                    "Incorrect read inputs: {:#x}, {}. Expected: {:#x}, {}",
-                    address.0,
-                    width.bytes(),
-                    expected_address.0,
-                    expected_width.bytes()
-                )
-            }
+            assert!(
+                expected_address == address && expected_width == width,
+                "Incorrect read inputs: {:#x}, {}. Expected: {:#x}, {}",
+                address.0,
+                width.bytes(),
+                expected_address.0,
+                expected_width.bytes()
+            );
+            output
         } else {
             panic!("More calls to read than Expected!");
         }
@@ -46,7 +44,7 @@ impl Bus for TestBus {
             assert_eq!(
                 expected,
                 (address, width, value),
-                "Incorrect write inputs: {:#x}, {}, {}. Expected: {:#x}, {}, {}",
+                "Incorrect write inputs: {:#x}, {}, {:#x}. Expected: {:#x}, {}, {:#x}",
                 address.0,
                 width.bytes(),
                 value,
