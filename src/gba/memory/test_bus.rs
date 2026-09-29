@@ -29,7 +29,7 @@ impl Bus for TestBus {
                 output
             } else {
                 panic!(
-                    "Incorrect inputs: {:#x}, {}. Expected: {:#x}, {}",
+                    "Incorrect read inputs: {:#x}, {}. Expected: {:#x}, {}",
                     address.0,
                     width.bytes(),
                     expected_address.0,
@@ -46,7 +46,7 @@ impl Bus for TestBus {
             assert_eq!(
                 expected,
                 (address, width, value),
-                "Incorrect inputs: {:#x}, {}, {}. Expected: {:#x}, {}, {}",
+                "Incorrect write inputs: {:#x}, {}, {}. Expected: {:#x}, {}, {}",
                 address.0,
                 width.bytes(),
                 value,
@@ -73,5 +73,118 @@ impl Drop for TestBus {
                 self.write_inputs
             );
         }
+    }
+}
+
+mod tests {
+    use super::*;
+
+    #[test]
+    #[should_panic = "Incorrect write inputs"]
+    fn panics_on_wrong_address_to_write() {
+        let read_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.write(Address(1), BusWidth::B8, Bitfield::new(0));
+    }
+
+    #[test]
+    #[should_panic = "Incorrect write inputs"]
+    fn panics_on_wrong_width_to_write() {
+        let read_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.write(Address(0), BusWidth::B16, Bitfield::new(0));
+    }
+
+    #[test]
+    #[should_panic = "Incorrect write inputs"]
+    fn panics_on_wrong_value_to_write() {
+        let read_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.write(Address(0), BusWidth::B8, Bitfield::new(1));
+    }
+
+    #[test]
+    #[should_panic = "Incorrect read inputs"]
+    fn panics_on_wrong_address_to_read() {
+        let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let write_inputs = vec![];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.read(Address(1), BusWidth::B8);
+    }
+
+    #[test]
+    #[should_panic = "Incorrect read inputs"]
+    fn panics_on_wrong_width_to_read() {
+        let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let write_inputs = vec![];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.read(Address(0), BusWidth::B16);
+    }
+
+    #[test]
+    #[should_panic = "More calls to write than Expected!"]
+    fn panics_on_too_many_calls_to_write() {
+        let read_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        bus.write(Address(0), BusWidth::B8, Bitfield::new(0));
+        bus.write(Address(0), BusWidth::B8, Bitfield::new(0));
+    }
+
+    #[test]
+    #[should_panic = "More calls to read than Expected!"]
+    fn panics_on_too_many_calls_to_read() {
+        let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let write_inputs = vec![];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        let result = bus.read(Address(0), BusWidth::B8);
+        assert_eq!(result, Bitfield::new(0));
+        _ = bus.read(Address(0), BusWidth::B8);
+    }
+
+    #[test]
+    #[should_panic = "Insufficient Writes:"]
+    fn panics_on_too_few_calls_to_write() {
+        let read_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let _bus = TestBus::new(read_inputs, write_inputs);
+    }
+
+    #[test]
+    #[should_panic = "Insufficient Reads:"]
+    fn panics_on_too_few_calls_to_read() {
+        let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
+        let write_inputs = vec![];
+        let _bus = TestBus::new(read_inputs, write_inputs);
+    }
+
+    #[test]
+    fn correct_use() {
+        let read_output_1 = Bitfield::new(1);
+        let read_output_2 = Bitfield::new(2);
+        let read_val_1 = (Address(1), BusWidth::B8, read_output_1);
+        let read_val_2 = (Address(2), BusWidth::B16, read_output_2);
+        let write_val = (Address(3), BusWidth::B32, Bitfield::new(3));
+        let read_inputs = vec![read_val_1, read_val_2];
+        let write_inputs = vec![write_val];
+        let mut bus = TestBus::new(read_inputs, write_inputs);
+
+        let read_result_1 = bus.read(read_val_1.0, read_val_1.1);
+        assert_eq!(read_result_1, read_val_1.2);
+
+        bus.write(write_val.0, write_val.1, write_val.2);
+
+        let read_result_2 = bus.read(read_val_2.0, read_val_2.1);
+        assert_eq!(read_result_2, read_val_2.2);
     }
 }
