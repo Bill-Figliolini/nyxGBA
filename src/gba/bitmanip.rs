@@ -32,7 +32,7 @@ impl Bitfield {
 
 impl std::fmt::LowerHex for Bitfield {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{:#x}", self.0)
+        std::fmt::LowerHex::fmt(&self.0, f)
     }
 }
 
