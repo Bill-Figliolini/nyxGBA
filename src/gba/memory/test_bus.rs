@@ -130,7 +130,7 @@ mod tests {
     #[test]
     #[should_panic = "More calls to write than Expected!"]
     fn panics_on_too_many_calls_to_write() {
-        let read_inputs = vec![];
+        let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
         let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
         let mut bus = TestBus::new(read_inputs, write_inputs);
 
@@ -142,7 +142,7 @@ mod tests {
     #[should_panic = "More calls to read than Expected!"]
     fn panics_on_too_many_calls_to_read() {
         let read_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
-        let write_inputs = vec![];
+        let write_inputs = vec![(Address(0), BusWidth::B8, Bitfield::new(0))];
         let mut bus = TestBus::new(read_inputs, write_inputs);
 
         let result = bus.read(Address(0), BusWidth::B8);
