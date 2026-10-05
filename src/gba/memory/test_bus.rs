@@ -1,6 +1,6 @@
 use crate::gba::{
     bitmanip::Bitfield,
-    memory::{Bus, BusWidth, bus::Address},
+    memory::{Address, Bus, BusWidth},
 };
 
 pub(crate) struct TestBus {

@@ -1,12 +1,15 @@
 use std::ops::{Index, IndexMut};
 
 use crate::gba::{
+    bitmanip::Bitfield,
+    clock::Time,
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
     instructions::{
         Instruction::{self, Arm},
         arm::ArmCondition,
+        parse,
     },
-    memory::Bus,
+    memory::{Bus, BusWidth},
 };
 
 #[derive(Debug)]
@@ -26,13 +29,28 @@ impl Cpu {
         self.registers.reset();
         self.cpsr.reset();
     }
-    pub(in crate::gba) fn step(&mut self, instruction: Instruction, _bus: &mut impl Bus) {
-        let Arm(arm_instr) = instruction;
-        if !self.check(arm_instr.condition) {
-            return;
+    pub(in crate::gba) fn step(&mut self, bus: &mut impl Bus) -> Time {
+        let fetched_instruction = self.fetch(bus);
+        let instruction = parse(fetched_instruction);
+        let Arm(command) = instruction;
+        if self.check(command.condition) {
+            self.run_arm(command);
         }
-        self.run_arm(arm_instr);
+        Time(0)
     }
+
+    fn fetch(&mut self, bus: &mut impl Bus) -> Bitfield {
+        bus.read(self.registers.program_counter(), BusWidth::B32)
+    }
+
+    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
+    pub(in crate::gba::cpu) fn test_step(&mut self, instruction: Instruction, _bus: &mut impl Bus) {
+        let Arm(arm_instr) = instruction;
+        if self.check(arm_instr.condition) {
+            self.run_arm(arm_instr);
+        }
+    }
+
     pub(super) fn read(&self, reg: Register) -> u32 {
         if let Register::R15 = reg {
             let program_count_step = 8;
@@ -117,7 +135,7 @@ mod tests {
                     source: operand,
                 });
 
-                cpu.step(instruction, &mut bus);
+                cpu.test_step(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
@@ -141,7 +159,7 @@ mod tests {
                     read_reg,
                     source: operand,
                 });
-                cpu.step(instruction, &mut bus);
+                cpu.test_step(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);

@@ -5,6 +5,7 @@ use std::path::Path;
 use crate::gba::{
     bitmanip::Bitfield,
     memory::{
+        Address,
         ram::{ONBOARDRAMMASK, ONCHIPRAMMASK, Ram},
         rom::Rom,
     },
@@ -15,8 +16,6 @@ pub(in crate::gba) struct MemoryBus {
     board_memory: Ram,
     chip_memory: Ram,
 }
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) struct Address(pub u32);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum BusWidth {

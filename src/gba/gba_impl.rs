@@ -1,15 +1,9 @@
-use std::{path::Path, process::abort};
-
-use crate::gba::{
-    bitmanip::Bitfield,
-    cpu::Cpu,
-    instructions,
-    memory::{BusWidth, MemoryBus},
-};
+use crate::gba::{clock::Time, cpu::Cpu, memory::MemoryBus};
 
 pub(crate) struct Gba {
     cpu: Cpu,
     memory: MemoryBus,
+    clock: Time,
 }
 
 impl Gba {
@@ -17,19 +11,18 @@ impl Gba {
         Self {
             cpu: Cpu::startup(),
             memory: MemoryBus::startup(),
+            clock: Time(0),
         }
     }
     pub(crate) fn reset(&mut self) {
         self.cpu.reset();
+        self.clock.0 = 0;
     }
     pub(crate) fn run(&mut self) {
-        let instruction = instructions::parse(Bitfield::new(0));
-        self.cpu.step(instruction, &mut self.memory);
-        let path = Path::new("./test-data/suite.gba");
-        let Ok(()) = self.memory.load_rom(path) else {
-            abort()
-        };
-        let result = self.memory.rom.read(0, BusWidth::B8);
-        println!("{result}");
+        loop {
+            let cycles = self.cpu.step(&mut self.memory);
+            let (next_clock, _overflow) = self.clock.overflowing_add(cycles);
+            self.clock = next_clock;
+        }
     }
 }

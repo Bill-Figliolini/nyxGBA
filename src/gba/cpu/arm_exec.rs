@@ -94,7 +94,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.step(instr, &mut bus);
+            cpu.test_step(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_carry_flag());
@@ -116,7 +116,7 @@ mod tests {
                 source: SourceOperand::Immediate(0),
             });
 
-            cpu.step(instr, &mut bus);
+            cpu.test_step(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_zero_flag());
@@ -137,7 +137,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             });
 
-            cpu.step(instr, &mut bus);
+            cpu.test_step(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
@@ -158,7 +158,7 @@ mod tests {
                 source: SourceOperand::Immediate(val.cast_unsigned()),
             });
 
-            cpu.step(instr, &mut bus);
+            cpu.test_step(instr, &mut bus);
 
             assert!(!cpu.cpsr.get_overflow_flag());
         }
@@ -178,7 +178,7 @@ mod tests {
                 source: SourceOperand::Immediate(0x8000_0000),
             });
 
-            cpu.step(instr, &mut bus);
+            cpu.test_step(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
