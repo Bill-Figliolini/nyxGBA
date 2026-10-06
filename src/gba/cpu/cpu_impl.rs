@@ -1,5 +1,3 @@
-use std::ops::{Index, IndexMut};
-
 use crate::gba::{
     bitmanip::Bitfield,
     clock::Time,
@@ -8,7 +6,7 @@ use crate::gba::{
         arm::{ArmCondition, ArmInstruction},
         parse_arm,
     },
-    memory::{Bus, BusWidth},
+    memory::{Address, Bus, BusWidth},
 };
 
 #[derive(Debug)]
@@ -35,7 +33,9 @@ impl Cpu {
     }
 
     fn fetch(&mut self, bus: &mut impl Bus) -> Bitfield {
-        bus.read(self.registers.program_counter(), BusWidth::B32)
+        let pc = self.registers[Register::R15];
+        self.registers[Register::R15] = pc.wrapping_add(self.instruction_width());
+        bus.read(Address(pc), BusWidth::B32)
     }
 
     pub(super) fn arm_exec(&mut self, instruction: ArmInstruction, bus: &mut impl Bus) -> Time {
@@ -47,17 +47,23 @@ impl Cpu {
 
     pub(super) fn read(&self, reg: Register) -> u32 {
         if let Register::R15 = reg {
-            let program_count_step = 8;
-            self.registers.index(reg).wrapping_add(program_count_step)
+            self.registers[reg].wrapping_add(self.instruction_width())
         } else {
-            *self.registers.index(reg)
+            self.registers[reg]
         }
     }
+
     pub(super) fn write(&mut self, reg: Register, value: u32) {
         if let Register::R15 = reg {
             // TODO: Flush Precache pipeline when added
         }
-        *self.registers.index_mut(reg) = value;
+        self.registers[reg] = value;
+    }
+
+    #[allow(clippy::unused_self, reason = "will be needed once thumb is added")]
+    fn instruction_width(&self) -> u32 {
+        //Pc incrementing necessarily follows the size of the instruction, so readahead on r15 reads is the same as pc incrementing on fetch.
+        4
     }
 
     fn check(&self, condition: ArmCondition) -> bool {

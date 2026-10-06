@@ -1,7 +1,5 @@
 use std::ops::{Index, IndexMut};
 
-use crate::gba::memory::Address;
-
 #[derive(Debug, Clone, Copy)]
 #[repr(u8)]
 #[expect(dead_code, reason = "To be used later")]
@@ -41,11 +39,6 @@ impl Registers {
 
     fn initial_values() -> [u32; 16] {
         [0; 16]
-    }
-    pub(crate) fn program_counter(&mut self) -> Address {
-        let program_address = self[Register::R15];
-        self[Register::R15] = self[Register::R15].strict_add(4);
-        Address(program_address)
     }
 }
 impl Index<Register> for Registers {
