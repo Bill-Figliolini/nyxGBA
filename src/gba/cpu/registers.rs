@@ -43,7 +43,9 @@ impl Registers {
         [0; 16]
     }
     pub(crate) fn program_counter(&mut self) -> Address {
-        Address(self[Register::R15])
+        let program_address = self[Register::R15];
+        self[Register::R15] = self[Register::R15].strict_add(4);
+        Address(program_address)
     }
 }
 impl Index<Register> for Registers {
