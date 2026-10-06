@@ -68,7 +68,7 @@ mod tests {
     mod add {
         use crate::gba::{
             cpu::Register,
-            instructions::{self, Instruction},
+            instructions::{self},
             memory::TestBus,
         };
 
@@ -85,14 +85,14 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
-            let instr = Instruction::Arm(ArmCommand {
+            let instr = ArmCommand {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
                 read_reg: reg,
                 source: SourceOperand::Immediate(1),
-            });
+            };
 
             cpu.test_step(instr, &mut bus);
 
@@ -107,14 +107,14 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0);
-            let instr = Instruction::Arm(ArmCommand {
+            let instr = ArmCommand {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
                 read_reg: reg,
                 source: SourceOperand::Immediate(0),
-            });
+            };
 
             cpu.test_step(instr, &mut bus);
 
@@ -128,14 +128,14 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
-            let instr = Instruction::Arm(ArmCommand {
+            let instr = ArmCommand {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
                 read_reg: reg,
                 source: SourceOperand::Immediate(1),
-            });
+            };
 
             cpu.test_step(instr, &mut bus);
 
@@ -149,14 +149,14 @@ mod tests {
             let reg = Register::R0;
             let val: i32 = -1;
             cpu.write(reg, val.cast_unsigned());
-            let instr = Instruction::Arm(ArmCommand {
+            let instr = ArmCommand {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
                 read_reg: reg,
                 source: SourceOperand::Immediate(val.cast_unsigned()),
-            });
+            };
 
             cpu.test_step(instr, &mut bus);
 
@@ -169,14 +169,14 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
-            let instr = Instruction::Arm(ArmCommand {
+            let instr = ArmCommand {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
                 destination_reg: dest,
                 read_reg: reg,
                 source: SourceOperand::Immediate(0x8000_0000),
-            });
+            };
 
             cpu.test_step(instr, &mut bus);
 

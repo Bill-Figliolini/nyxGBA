@@ -1,10 +1,4 @@
-use super::instructions::arm::ArmCommand;
 pub(crate) mod arm;
-pub(crate) mod parsing;
+mod parsing;
 
-pub(crate) use parsing::parse;
-
-#[derive(Debug)]
-pub(crate) enum Instruction {
-    Arm(ArmCommand),
-}
+pub(crate) use parsing::parse_arm;

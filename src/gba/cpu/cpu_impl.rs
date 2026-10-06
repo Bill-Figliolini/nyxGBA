@@ -5,9 +5,8 @@ use crate::gba::{
     clock::Time,
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
     instructions::{
-        Instruction::{self, Arm},
-        arm::ArmCondition,
-        parse,
+        arm::{ArmCommand, ArmCondition},
+        parse_arm,
     },
     memory::{Bus, BusWidth},
 };
@@ -31,10 +30,9 @@ impl Cpu {
     }
     pub(in crate::gba) fn step(&mut self, bus: &mut impl Bus) -> Time {
         let fetched_instruction = self.fetch(bus);
-        let instruction = parse(fetched_instruction);
-        let Arm(command) = instruction;
-        if self.check(command.condition) {
-            self.run_arm(command);
+        let instruction = parse_arm(fetched_instruction);
+        if self.check(instruction.condition) {
+            self.run_arm(instruction);
         }
         Time(0)
     }
@@ -44,10 +42,9 @@ impl Cpu {
     }
 
     #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
-    pub(in crate::gba::cpu) fn test_step(&mut self, instruction: Instruction, _bus: &mut impl Bus) {
-        let Arm(arm_instr) = instruction;
-        if self.check(arm_instr.condition) {
-            self.run_arm(arm_instr);
+    pub(in crate::gba::cpu) fn test_step(&mut self, instruction: ArmCommand, _bus: &mut impl Bus) {
+        if self.check(instruction.condition) {
+            self.run_arm(instruction);
         }
     }
 
@@ -126,14 +123,14 @@ mod tests {
                 let value = 10;
                 let operand = SourceOperand::Immediate(value);
                 let original_read_reg_val = cpu.read(read_reg);
-                let instruction = Arm(ArmCommand {
+                let instruction = ArmCommand {
                     condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
                     destination_reg: register,
                     read_reg,
                     source: operand,
-                });
+                };
 
                 cpu.test_step(instruction, &mut bus);
 
@@ -151,14 +148,14 @@ mod tests {
                 let operand = SourceOperand::Register(write_reg);
                 cpu.write(write_reg, value);
                 let original_read_reg_val = cpu.read(read_reg);
-                let instruction = Arm(ArmCommand {
+                let instruction = ArmCommand {
                     condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
                     destination_reg: register,
                     read_reg,
                     source: operand,
-                });
+                };
                 cpu.test_step(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
