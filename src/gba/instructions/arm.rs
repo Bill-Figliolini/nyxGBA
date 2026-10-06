@@ -1,7 +1,7 @@
 use crate::gba::cpu::Register;
 
 #[derive(Debug)]
-pub(crate) struct ArmCommand {
+pub(crate) struct ArmInstruction {
     pub condition: ArmCondition,
     pub op_code: ArmOpCode,
     pub set_flag: bool,

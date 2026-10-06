@@ -1,18 +1,18 @@
 use crate::gba::{
     cpu::cpu_impl::Cpu,
-    instructions::arm::{ArmCommand, ArmOpCode, SourceOperand},
+    instructions::arm::{ArmInstruction, ArmOpCode, SourceOperand},
     memory::Bus,
 };
 
 impl Cpu {
-    pub(super) fn run_arm(&mut self, arm: ArmCommand, _bus: &mut impl Bus) {
+    pub(super) fn run_arm(&mut self, arm: ArmInstruction, _bus: &mut impl Bus) {
         match arm.op_code {
             ArmOpCode::Mov => self.arm_mov(arm),
             ArmOpCode::Add => self.arm_add(arm),
         }
     }
-    fn arm_mov(&mut self, command: ArmCommand) {
-        let ArmCommand {
+    fn arm_mov(&mut self, command: ArmInstruction) {
+        let ArmInstruction {
             condition: _,
             op_code: _,
             set_flag: _,
@@ -26,8 +26,8 @@ impl Cpu {
         };
         self.write(destination, value);
     }
-    fn arm_add(&mut self, command: ArmCommand) {
-        let ArmCommand {
+    fn arm_add(&mut self, command: ArmInstruction) {
+        let ArmInstruction {
             condition: _,
             op_code: _,
             set_flag,
@@ -82,7 +82,7 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
-            let instr = ArmCommand {
+            let instr = ArmInstruction {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
@@ -104,7 +104,7 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0);
-            let instr = ArmCommand {
+            let instr = ArmInstruction {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
@@ -125,7 +125,7 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
-            let instr = ArmCommand {
+            let instr = ArmInstruction {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
@@ -146,7 +146,7 @@ mod tests {
             let reg = Register::R0;
             let val: i32 = -1;
             cpu.write(reg, val.cast_unsigned());
-            let instr = ArmCommand {
+            let instr = ArmInstruction {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,
@@ -166,7 +166,7 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
-            let instr = ArmCommand {
+            let instr = ArmInstruction {
                 condition: instructions::arm::ArmCondition::Always,
                 op_code: ArmOpCode::Add,
                 set_flag: true,

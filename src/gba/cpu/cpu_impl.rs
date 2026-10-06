@@ -5,7 +5,7 @@ use crate::gba::{
     clock::Time,
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
     instructions::{
-        arm::{ArmCommand, ArmCondition},
+        arm::{ArmCondition, ArmInstruction},
         parse_arm,
     },
     memory::{Bus, BusWidth},
@@ -38,7 +38,7 @@ impl Cpu {
         bus.read(self.registers.program_counter(), BusWidth::B32)
     }
 
-    pub(super) fn arm_exec(&mut self, instruction: ArmCommand, bus: &mut impl Bus) -> Time {
+    pub(super) fn arm_exec(&mut self, instruction: ArmInstruction, bus: &mut impl Bus) -> Time {
         if self.check(instruction.condition) {
             self.run_arm(instruction, bus);
         }
@@ -105,7 +105,7 @@ mod tests {
         mod arm {
             use super::*;
             use crate::gba::{
-                instructions::arm::{ArmCommand, ArmCondition, ArmOpCode, SourceOperand},
+                instructions::arm::{ArmCondition, ArmInstruction, ArmOpCode, SourceOperand},
                 memory::TestBus,
             };
             fn make_test_bus() -> TestBus {
@@ -120,7 +120,7 @@ mod tests {
                 let value = 10;
                 let operand = SourceOperand::Immediate(value);
                 let original_read_reg_val = cpu.read(read_reg);
-                let instruction = ArmCommand {
+                let instruction = ArmInstruction {
                     condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
@@ -145,7 +145,7 @@ mod tests {
                 let operand = SourceOperand::Register(write_reg);
                 cpu.write(write_reg, value);
                 let original_read_reg_val = cpu.read(read_reg);
-                let instruction = ArmCommand {
+                let instruction = ArmInstruction {
                     condition: ArmCondition::Always,
                     op_code: ArmOpCode::Mov,
                     set_flag: false,
