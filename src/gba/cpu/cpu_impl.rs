@@ -31,21 +31,18 @@ impl Cpu {
     pub(in crate::gba) fn step(&mut self, bus: &mut impl Bus) -> Time {
         let fetched_instruction = self.fetch(bus);
         let instruction = parse_arm(fetched_instruction);
-        if self.check(instruction.condition) {
-            self.run_arm(instruction);
-        }
-        Time(0)
+        self.arm_exec(instruction, bus)
     }
 
     fn fetch(&mut self, bus: &mut impl Bus) -> Bitfield {
         bus.read(self.registers.program_counter(), BusWidth::B32)
     }
 
-    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
-    pub(in crate::gba::cpu) fn test_step(&mut self, instruction: ArmCommand, _bus: &mut impl Bus) {
+    pub(super) fn arm_exec(&mut self, instruction: ArmCommand, bus: &mut impl Bus) -> Time {
         if self.check(instruction.condition) {
-            self.run_arm(instruction);
+            self.run_arm(instruction, bus);
         }
+        Time(0)
     }
 
     pub(super) fn read(&self, reg: Register) -> u32 {
@@ -132,7 +129,7 @@ mod tests {
                     source: operand,
                 };
 
-                cpu.test_step(instruction, &mut bus);
+                cpu.arm_exec(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
@@ -156,7 +153,7 @@ mod tests {
                     read_reg,
                     source: operand,
                 };
-                cpu.test_step(instruction, &mut bus);
+                cpu.arm_exec(instruction, &mut bus);
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);

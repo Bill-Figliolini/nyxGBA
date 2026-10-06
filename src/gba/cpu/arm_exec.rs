@@ -1,10 +1,11 @@
 use crate::gba::{
     cpu::cpu_impl::Cpu,
     instructions::arm::{ArmCommand, ArmOpCode, SourceOperand},
+    memory::Bus,
 };
 
 impl Cpu {
-    pub(super) fn run_arm(&mut self, arm: ArmCommand) {
+    pub(super) fn run_arm(&mut self, arm: ArmCommand, _bus: &mut impl Bus) {
         match arm.op_code {
             ArmOpCode::Mov => self.arm_mov(arm),
             ArmOpCode::Add => self.arm_add(arm),
@@ -66,11 +67,7 @@ impl Cpu {
 mod tests {
     use super::*;
     mod add {
-        use crate::gba::{
-            cpu::Register,
-            instructions::{self},
-            memory::TestBus,
-        };
+        use crate::gba::{cpu::Register, instructions, memory::TestBus};
 
         use super::*;
 
@@ -94,7 +91,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             };
 
-            cpu.test_step(instr, &mut bus);
+            cpu.arm_exec(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_carry_flag());
@@ -116,7 +113,7 @@ mod tests {
                 source: SourceOperand::Immediate(0),
             };
 
-            cpu.test_step(instr, &mut bus);
+            cpu.arm_exec(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
             assert!(cpu.cpsr.get_zero_flag());
@@ -137,7 +134,7 @@ mod tests {
                 source: SourceOperand::Immediate(1),
             };
 
-            cpu.test_step(instr, &mut bus);
+            cpu.arm_exec(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
@@ -158,7 +155,7 @@ mod tests {
                 source: SourceOperand::Immediate(val.cast_unsigned()),
             };
 
-            cpu.test_step(instr, &mut bus);
+            cpu.arm_exec(instr, &mut bus);
 
             assert!(!cpu.cpsr.get_overflow_flag());
         }
@@ -178,7 +175,7 @@ mod tests {
                 source: SourceOperand::Immediate(0x8000_0000),
             };
 
-            cpu.test_step(instr, &mut bus);
+            cpu.arm_exec(instr, &mut bus);
 
             assert!(cpu.cpsr.get_overflow_flag());
         }
