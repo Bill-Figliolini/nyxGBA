@@ -8,6 +8,10 @@ impl Bitfield {
         Self(input)
     }
 
+    pub(crate) fn inner(self) -> u32 {
+        self.0
+    }
+
     pub(crate) fn set_val(&mut self, input: u32) {
         self.0 = input;
     }

@@ -83,6 +83,20 @@ impl MemoryBus {
     fn unused_read() -> u32 {
         0
     }
+    fn board_memory_write(&mut self, address: Address, width: BusWidth, value: u32) {
+        let address = address.0 & ONBOARDRAMMASK;
+        self.board_memory.write(address, width, value);
+    }
+    fn chip_memory_write(&mut self, address: Address, width: BusWidth, value: u32) {
+        let address = address.0 & ONCHIPRAMMASK;
+        self.chip_memory.write(address, width, value);
+    }
+    fn io_memory_write() {}
+    fn palette_memory_write() {}
+    fn vram_write() {}
+    fn oam_write() {}
+    fn gamepak_sram_write() {}
+    fn unused_write() {}
 }
 
 impl Bus for MemoryBus {
@@ -117,7 +131,23 @@ impl Bus for MemoryBus {
         Bitfield::new(value)
     }
 
-    fn write(&mut self, _address: Address, _width: BusWidth, _value: Bitfield) {}
+    fn write(&mut self, address: Address, width: BusWidth, value: Bitfield) {
+        match address.0 {
+            //General
+            0x0200_0000..=0x02FF_FFFF => self.board_memory_write(address, width, value.inner()),
+            0x0300_0000..=0x03FF_FFFF => self.chip_memory_write(address, width, value.inner()),
+            0x0400_0000..=0x0400_03FE => MemoryBus::io_memory_write(),
+
+            //Display
+            0x0500_0000..=0x0500_03FF => MemoryBus::palette_memory_write(),
+            0x0600_0000..=0x0601_7FFF => MemoryBus::vram_write(),
+            0x0700_0000..=0x0700_03FF => MemoryBus::oam_write(),
+
+            //External
+            0x0E00_0000..=0x0E00_FFFF => MemoryBus::gamepak_sram_write(),
+            _ => MemoryBus::unused_write(),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -256,6 +286,78 @@ mod tests {
             bus.chip_memory.load_raw(vals.iter().copied());
 
             assert_eq!(bus.read(Address(0x0300_0000), BusWidth::B32), output_val);
+        }
+
+        //writes
+        #[test]
+        fn board_memory_write_8b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0xAE);
+            let width = BusWidth::B8;
+            let address = Address(0x0200_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
+        }
+
+        #[test]
+        fn chip_memory_write_8b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0xAE);
+            let width = BusWidth::B8;
+            let address = Address(0x0300_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
+        }
+
+        #[test]
+        fn board_memory_write_16b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0x1234);
+            let width = BusWidth::B16;
+            let address = Address(0x0200_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
+        }
+
+        #[test]
+        fn chip_memory_write_16b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0x1234);
+            let width = BusWidth::B16;
+            let address = Address(0x0300_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
+        }
+        #[test]
+        fn board_memory_write_32b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0x1234_5678);
+            let width = BusWidth::B32;
+            let address = Address(0x0200_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
+        }
+
+        #[test]
+        fn chip_memory_write_32b() {
+            let mut bus = MemoryBus::startup();
+            let input_val = Bitfield::new(0x1234_5678);
+            let width = BusWidth::B32;
+            let address = Address(0x0300_0000);
+
+            bus.write(address, width, input_val);
+
+            assert_eq!(bus.read(address, width), input_val);
         }
     }
 }

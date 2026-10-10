@@ -1,6 +1,6 @@
 use crate::gba::memory::{
     BusWidth,
-    helpers::{read_le_bytes, u32_to_usize},
+    helpers::{read_le_bytes, u32_to_usize, write_le_bytes},
 };
 pub(in crate::gba::memory) struct Ram {
     memory: Vec<u8>,
@@ -32,5 +32,8 @@ impl Ram {
     }
     pub(in crate::gba::memory) fn read(&self, address: u32, width: BusWidth) -> u32 {
         read_le_bytes(&self.memory, address, width)
+    }
+    pub(in crate::gba::memory) fn write(&mut self, address: u32, width: BusWidth, value: u32) {
+        write_le_bytes(&mut self.memory, address, width, value);
     }
 }
