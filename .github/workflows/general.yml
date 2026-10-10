@@ -38,31 +38,31 @@ jobs:
           components: clippy
       - uses: Swatinem/rust-cache@v2
       - name: Linting
-        run: cargo clippy -- -D warnings
+        run: cargo clippy --all-targets -- -D warnings
 
   coverage:
     runs-on: ubuntu-latest
     env:
       CARGO_TERM_COLOR: always
     steps:
-        - uses: actions/checkout@v4
-        - uses: dtolnay/rust-toolchain@nightly
-          with:
-            components: llvm-tools-preview
-        - uses: taiki-e/install-action@cargo-llvm-cov
-        - uses: Swatinem/rust-cache@v2
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+        with:
+          components: llvm-tools-preview
+      - uses: taiki-e/install-action@cargo-llvm-cov
+      - uses: Swatinem/rust-cache@v2
 
-        - name: Coverage Summary
-          run: cargo llvm-cov --workspace --all-features --summary-only --fail-under-lines 80
+      - name: Coverage Summary
+        run: cargo llvm-cov --workspace --all-features --summary-only --fail-under-lines 80
 
-        - name: Generate lcov
-          run: cargo llvm-cov report --lcov --output-path lcov.info
-        - uses: actions/upload-artifact@v4
-          with:
-            name: lcov
-            path: lcov.info
-        - uses: codecov/codecov-action@v5
-          with:
-            token: ${{ secrets.CODECOV_TOKEN }}
-            files: lcov.info
-            fail_ci_if_error: false
+      - name: Generate lcov
+        run: cargo llvm-cov report --lcov --output-path lcov.info
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lcov
+          path: lcov.info
+      - uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: lcov.info
+          fail_ci_if_error: false
