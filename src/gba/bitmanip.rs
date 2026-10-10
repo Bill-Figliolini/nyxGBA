@@ -12,7 +12,7 @@ impl Bitfield {
         self.0
     }
 
-    pub(crate) fn set_val(&mut self, input: u32) {
+    pub(crate) fn set_value(&mut self, input: u32) {
         self.0 = input;
     }
 
@@ -20,16 +20,16 @@ impl Bitfield {
         debug_assert!(index < 32);
         self.0 & (1 << index) != 0
     }
-    pub(crate) fn set_field(&mut self, index: u32, value: bool) {
+    pub(crate) fn set_bit(&mut self, index: u32, value: bool) {
         let val = u32::from(value);
         debug_assert!(index < 32);
         self.0 = (self.0 & !(1 << index)) | (val << index);
     }
 
-    pub(crate) fn get_range(self, start: u32, length: u32) -> u32 {
+    pub(crate) fn bits(self, start: u32, length: u32) -> u32 {
         debug_assert!(length != 0);
         debug_assert!(start.strict_add(length) <= 32);
-        let bits: u32 = 32;
+        let bits: u32 = u32::BITS;
         (self.0.strict_shr(start)) & (u32::MAX.strict_shr(bits.strict_sub(length)))
     }
 }
@@ -63,7 +63,7 @@ mod tests {
         for i in 0..32 {
             let mut bitfield = Bitfield::new(0);
 
-            bitfield.set_field(i, true);
+            bitfield.set_bit(i, true);
 
             assert!(bitfield.bit(i));
         }
@@ -73,26 +73,26 @@ mod tests {
         for i in 0..32 {
             let mut bitfield = Bitfield::new(u32::MAX);
 
-            bitfield.set_field(i, false);
+            bitfield.set_bit(i, false);
 
             assert!(!bitfield.bit(i));
         }
     }
 
     #[test]
-    fn gets_range() {
+    fn gets_bits() {
         let bitfield = Bitfield::new(u32::MAX);
 
-        let result = bitfield.get_range(0, 4);
+        let result = bitfield.bits(0, 4);
 
         assert_eq!(result, 15);
     }
 
     #[test]
-    fn gets_range_and_shifts_to_base() {
+    fn gets_bits_and_shifts_to_base() {
         let bitfield = Bitfield::new(u32::MAX);
 
-        let result = bitfield.get_range(6, 4);
+        let result = bitfield.bits(6, 4);
 
         assert_eq!(result, 15);
     }
@@ -100,7 +100,7 @@ mod tests {
     fn full_width_returns_underlying() {
         let bitfield = Bitfield::new(u32::MAX);
 
-        let result = bitfield.get_range(0, 32);
+        let result = bitfield.bits(0, 32);
 
         assert_eq!(result, u32::MAX);
     }

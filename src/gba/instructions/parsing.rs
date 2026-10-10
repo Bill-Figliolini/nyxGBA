@@ -8,7 +8,7 @@ use crate::gba::{
 };
 
 pub(crate) fn parse_arm(input: Bitfield) -> ArmInstruction {
-    let condition = ArmCondition::new(input.get_range(28, 4));
+    let condition = ArmCondition::new(input.bits(28, 4));
     let register = Register::R0;
     let read_reg = Register::R1;
     let value = 10;

@@ -12,13 +12,13 @@ pub(in crate::gba::memory) const ON_BOARD_RAM_SIZE: u32 = 0x4_0000;
 pub(in crate::gba::memory) const ON_BOARD_RAM_MASK: u32 = ON_BOARD_RAM_SIZE - 1;
 
 impl Ram {
-    pub(in crate::gba::memory) fn initialize_on_chip() -> Self {
-        Ram::initialize(u32_to_usize(ON_CHIP_RAM_SIZE))
+    pub(in crate::gba::memory) fn new_on_chip() -> Self {
+        Ram::with_size(u32_to_usize(ON_CHIP_RAM_SIZE))
     }
-    pub(in crate::gba::memory) fn initialize_on_board() -> Self {
-        Ram::initialize(u32_to_usize(ON_BOARD_RAM_SIZE))
+    pub(in crate::gba::memory) fn new_on_board() -> Self {
+        Ram::with_size(u32_to_usize(ON_BOARD_RAM_SIZE))
     }
-    fn initialize(size: usize) -> Self {
+    fn with_size(size: usize) -> Self {
         Self {
             memory: vec![0; size],
         }

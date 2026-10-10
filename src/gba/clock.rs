@@ -1,6 +1,6 @@
 #![expect(dead_code, reason = "Work in progress module")]
-pub(crate) const HWFREQUENCY: Time = Time(2_u64.strict_pow(24));
-pub(crate) const HWFRAMETIME: Time = Time(HWFREQUENCY.0.div_ceil(60));
+pub(crate) const HW_FREQUENCY: Time = Time(2_u64.strict_pow(24));
+pub(crate) const HW_FRAME_TIME: Time = Time(HW_FREQUENCY.0.div_ceil(60));
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub(crate) struct Time(pub u64);

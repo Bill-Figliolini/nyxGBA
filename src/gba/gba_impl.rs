@@ -7,10 +7,10 @@ pub(crate) struct Gba {
 }
 
 impl Gba {
-    pub(crate) fn startup() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
-            cpu: Cpu::startup(),
-            memory: MemoryBus::startup(),
+            cpu: Cpu::new(),
+            memory: MemoryBus::new(),
             clock: Time(0),
         }
     }

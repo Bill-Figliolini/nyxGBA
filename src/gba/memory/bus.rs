@@ -39,15 +39,15 @@ pub(crate) trait Bus {
 }
 
 impl MemoryBus {
-    pub(in crate::gba) fn startup() -> Self {
+    pub(in crate::gba) fn new() -> Self {
         Self {
-            rom: Rom::initialize(),
-            board_memory: Ram::initialize_on_board(),
-            chip_memory: Ram::initialize_on_chip(),
+            rom: Rom::new(),
+            board_memory: Ram::new_on_board(),
+            chip_memory: Ram::new_on_chip(),
         }
     }
     pub(in crate::gba) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
-        self.rom.load_rom(path)
+        self.rom.load(path)
     }
 
     fn bios_read() -> u32 {
@@ -158,7 +158,7 @@ mod tests {
 
         #[test]
         fn gamepak_read_waitstates_read_same_memory() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0xAE];
             let output_val = Bitfield::new(0xAE);
             bus.rom.load_raw(vals.iter().copied());
@@ -182,7 +182,7 @@ mod tests {
 
         #[test]
         fn gamepak_read_16b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x34, 0x12];
             let output_val = Bitfield::new(0x0000_1234);
             bus.rom.load_raw(vals.iter().copied());
@@ -205,7 +205,7 @@ mod tests {
         }
         #[test]
         fn gamepak_read_32b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
             let output_val = Bitfield::new(0x1234_5678);
             bus.rom.load_raw(vals.iter().copied());
@@ -231,7 +231,7 @@ mod tests {
         use super::*;
         #[test]
         fn board_memory_8b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0xAE];
             let output_val = Bitfield::new(0xAE);
             bus.board_memory.load_raw(vals.iter().copied());
@@ -241,7 +241,7 @@ mod tests {
 
         #[test]
         fn chip_memory_8b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0xAE];
             let output_val = Bitfield::new(0xAE);
             bus.chip_memory.load_raw(vals.iter().copied());
@@ -251,7 +251,7 @@ mod tests {
 
         #[test]
         fn board_memory_16b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x34, 0x12];
             let output_val = Bitfield::new(0x1234);
             bus.board_memory.load_raw(vals.iter().copied());
@@ -261,7 +261,7 @@ mod tests {
 
         #[test]
         fn chip_memory_16b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x34, 0x12];
             let output_val = Bitfield::new(0x1234);
             bus.chip_memory.load_raw(vals.iter().copied());
@@ -270,7 +270,7 @@ mod tests {
         }
         #[test]
         fn board_memory_32b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
             let output_val = Bitfield::new(0x1234_5678);
             bus.board_memory.load_raw(vals.iter().copied());
@@ -280,7 +280,7 @@ mod tests {
 
         #[test]
         fn chip_memory_32b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let vals: Vec<u8> = vec![0x78, 0x56, 0x34, 0x12];
             let output_val = Bitfield::new(0x1234_5678);
             bus.chip_memory.load_raw(vals.iter().copied());
@@ -291,7 +291,7 @@ mod tests {
         //writes
         #[test]
         fn board_memory_write_8b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0xAE);
             let width = BusWidth::B8;
             let address = Address(0x0200_0000);
@@ -303,7 +303,7 @@ mod tests {
 
         #[test]
         fn chip_memory_write_8b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0xAE);
             let width = BusWidth::B8;
             let address = Address(0x0300_0000);
@@ -315,7 +315,7 @@ mod tests {
 
         #[test]
         fn board_memory_write_16b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0x1234);
             let width = BusWidth::B16;
             let address = Address(0x0200_0000);
@@ -327,7 +327,7 @@ mod tests {
 
         #[test]
         fn chip_memory_write_16b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0x1234);
             let width = BusWidth::B16;
             let address = Address(0x0300_0000);
@@ -338,7 +338,7 @@ mod tests {
         }
         #[test]
         fn board_memory_write_32b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0x1234_5678);
             let width = BusWidth::B32;
             let address = Address(0x0200_0000);
@@ -350,7 +350,7 @@ mod tests {
 
         #[test]
         fn chip_memory_write_32b() {
-            let mut bus = MemoryBus::startup();
+            let mut bus = MemoryBus::new();
             let input_val = Bitfield::new(0x1234_5678);
             let width = BusWidth::B32;
             let address = Address(0x0300_0000);

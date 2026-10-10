@@ -47,7 +47,7 @@ impl Cpu {
             .1;
         if set_flag {
             self.cpsr.set_zero(result == 0);
-            self.cpsr.set_signed(result.cast_signed().is_negative());
+            self.cpsr.set_negative(result.cast_signed().is_negative());
             self.cpsr.set_carry(carry);
             self.cpsr.set_overflow(overflow);
         }
@@ -76,7 +76,7 @@ mod tests {
 
         #[test]
         fn carry_flag_set_on_overflow() {
-            let mut cpu = Cpu::startup();
+            let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
@@ -98,7 +98,7 @@ mod tests {
 
         #[test]
         fn set_flag_on_zero() {
-            let mut cpu = Cpu::startup();
+            let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
@@ -119,7 +119,7 @@ mod tests {
         }
         #[test]
         fn set_overflow_flag_on_signed_overflow() {
-            let mut cpu = Cpu::startup();
+            let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
@@ -139,7 +139,7 @@ mod tests {
         }
         #[test]
         fn do_not_set_overflow_flag_on_negative_addition() {
-            let mut cpu = Cpu::startup();
+            let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
@@ -160,7 +160,7 @@ mod tests {
         }
         #[test]
         fn set_overflow_flag_on_overflow() {
-            let mut cpu = Cpu::startup();
+            let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;

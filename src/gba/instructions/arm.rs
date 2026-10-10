@@ -23,9 +23,9 @@ pub(crate) enum ArmCondition {
     UnsignedHigher,
     UnsignedLowerOrSame,
     SignedGreaterEq,
-    SignedLesser,
+    SignedLess,
     SignedGreater,
-    SignedLesserEq,
+    SignedLessEq,
     Always,
     Never,
 }
@@ -48,37 +48,15 @@ impl ArmCondition {
             0x8 => ArmCondition::UnsignedHigher,
             0x9 => ArmCondition::UnsignedLowerOrSame,
             0xA => ArmCondition::SignedGreaterEq,
-            0xB => ArmCondition::SignedLesser,
+            0xB => ArmCondition::SignedLess,
             0xC => ArmCondition::SignedGreater,
-            0xD => ArmCondition::SignedLesserEq,
+            0xD => ArmCondition::SignedLessEq,
             0xE => ArmCondition::Always,
             0xF => ArmCondition::Never,
             _ => unreachable!(),
         }
     }
-    #[cfg_attr(not(test), expect(dead_code, reason = "For Testing Purposes"))]
-    pub(crate) fn get_options() -> Vec<Self> {
-        vec![
-            ArmCondition::Equal,
-            ArmCondition::NotEqual,
-            ArmCondition::CarrySet,
-            ArmCondition::CarryCleared,
-            ArmCondition::Minus,
-            ArmCondition::Plus,
-            ArmCondition::SignedOverflow,
-            ArmCondition::NoSignedOverflow,
-            ArmCondition::UnsignedHigher,
-            ArmCondition::UnsignedLowerOrSame,
-            ArmCondition::SignedGreaterEq,
-            ArmCondition::SignedLesser,
-            ArmCondition::SignedGreater,
-            ArmCondition::SignedLesserEq,
-            ArmCondition::Always,
-            ArmCondition::Never,
-        ]
-    }
 }
-
 #[derive(Debug)]
 #[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmOpCode {
@@ -95,12 +73,30 @@ pub(crate) enum SourceOperand {
 
 #[cfg(test)]
 mod tests {
+    const ALL: [ArmCondition; 16] = [
+        ArmCondition::Equal,
+        ArmCondition::NotEqual,
+        ArmCondition::CarrySet,
+        ArmCondition::CarryCleared,
+        ArmCondition::Minus,
+        ArmCondition::Plus,
+        ArmCondition::SignedOverflow,
+        ArmCondition::NoSignedOverflow,
+        ArmCondition::UnsignedHigher,
+        ArmCondition::UnsignedLowerOrSame,
+        ArmCondition::SignedGreaterEq,
+        ArmCondition::SignedLess,
+        ArmCondition::SignedGreater,
+        ArmCondition::SignedLessEq,
+        ArmCondition::Always,
+        ArmCondition::Never,
+    ];
     use super::*;
     mod condition {
         use super::*;
         #[test]
         fn accepts_values_from_0_to_f() {
-            let results = ArmCondition::get_options();
+            let results = ALL;
             let mut results_iter = results.into_iter();
             for i in 0..0x10 {
                 assert_eq!(ArmCondition::new(i), results_iter.next().unwrap());

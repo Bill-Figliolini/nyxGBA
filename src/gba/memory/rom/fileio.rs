@@ -11,12 +11,12 @@ pub(crate) struct Rom {
     memory: Vec<u8>,
 }
 
-const GAMEPAKSIZE: usize = 0x0A00_0000 - 0x0800_0000;
+const GAMEPAK_SIZE: usize = 0x0A00_0000 - 0x0800_0000;
 
 impl Rom {
-    pub(crate) fn initialize() -> Self {
+    pub(crate) fn new() -> Self {
         Self {
-            memory: Vec::with_capacity(GAMEPAKSIZE),
+            memory: Vec::with_capacity(GAMEPAK_SIZE),
         }
     }
 
@@ -27,7 +27,7 @@ impl Rom {
     }
 
     //TODO: Handle misaligned reads and determine a suitable open-bus descision.
-    pub(crate) fn load_rom(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
+    pub(crate) fn load(&mut self, path: impl AsRef<Path>) -> anyhow::Result<()> {
         let path = path.as_ref();
         let mut file =
             File::open(path).with_context(|| format!("Error opening file: {}", path.display()))?;
@@ -37,7 +37,7 @@ impl Rom {
                 .len(),
         )?;
 
-        if file_size > GAMEPAKSIZE {
+        if file_size > GAMEPAK_SIZE {
             return Err(anyhow!("File too large to be a GBA ROM"));
         }
 
@@ -63,18 +63,18 @@ mod tests {
     #[test]
     fn errors_on_non_existent_file() {
         let path = Path::new("arbitrary/path");
-        let mut rom = Rom::initialize();
+        let mut rom = Rom::new();
 
-        let result = rom.load_rom(path);
+        let result = rom.load(path);
 
         assert!(result.is_err());
     }
     #[test]
     fn opens_file() {
         let path = Path::new("./test-data/suite.gba");
-        let mut rom = Rom::initialize();
+        let mut rom = Rom::new();
 
-        rom.load_rom(path).unwrap();
+        rom.load(path).unwrap();
 
         assert_eq!(rom.read(0, BusWidth::B8), 0x2E);
     }

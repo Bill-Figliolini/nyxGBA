@@ -16,7 +16,7 @@ pub(crate) struct Cpu {
 }
 
 impl Cpu {
-    pub(crate) fn startup() -> Self {
+    pub(crate) fn new() -> Self {
         Cpu {
             registers: Registers::new(),
             cpsr: CurrentProgramStatusRegister::new(),
@@ -72,19 +72,19 @@ impl Cpu {
             ArmCondition::NotEqual => !self.cpsr.zero(),
             ArmCondition::CarrySet => self.cpsr.carry(),
             ArmCondition::CarryCleared => !self.cpsr.carry(),
-            ArmCondition::Minus => self.cpsr.signed(),
-            ArmCondition::Plus => !self.cpsr.signed(),
+            ArmCondition::Minus => self.cpsr.negative(),
+            ArmCondition::Plus => !self.cpsr.negative(),
             ArmCondition::SignedOverflow => self.cpsr.overflow(),
             ArmCondition::NoSignedOverflow => !self.cpsr.overflow(),
             ArmCondition::UnsignedHigher => self.cpsr.carry() && !self.cpsr.zero(),
             ArmCondition::UnsignedLowerOrSame => !self.cpsr.carry() || self.cpsr.zero(),
-            ArmCondition::SignedGreaterEq => self.cpsr.signed() == self.cpsr.overflow(),
-            ArmCondition::SignedLesser => self.cpsr.signed() != self.cpsr.overflow(),
+            ArmCondition::SignedGreaterEq => self.cpsr.negative() == self.cpsr.overflow(),
+            ArmCondition::SignedLess => self.cpsr.negative() != self.cpsr.overflow(),
             ArmCondition::SignedGreater => {
-                !self.cpsr.zero() && (self.cpsr.signed() == self.cpsr.overflow())
+                !self.cpsr.zero() && (self.cpsr.negative() == self.cpsr.overflow())
             }
-            ArmCondition::SignedLesserEq => {
-                self.cpsr.zero() || (self.cpsr.signed() != self.cpsr.overflow())
+            ArmCondition::SignedLessEq => {
+                self.cpsr.zero() || (self.cpsr.negative() != self.cpsr.overflow())
             }
             ArmCondition::Always => true,
             ArmCondition::Never => false,
@@ -109,7 +109,7 @@ mod tests {
             }
             #[test]
             fn mov_sets_register_value_with_immediate() {
-                let mut cpu = Cpu::startup();
+                let mut cpu = Cpu::new();
                 let mut bus = make_test_bus();
                 let register = Register::R0;
                 let read_reg = Register::R1;
@@ -132,7 +132,7 @@ mod tests {
             }
             #[test]
             fn mov_sets_register_with_pointed_register() {
-                let mut cpu = Cpu::startup();
+                let mut cpu = Cpu::new();
                 let mut bus = make_test_bus();
                 let register = Register::R1;
                 let read_reg = Register::R3;
@@ -360,8 +360,8 @@ mod tests {
                 }
 
                 #[test]
-                fn signed_lesser() {
-                    let condition = ArmCondition::SignedLesser;
+                fn signed_less() {
+                    let condition = ArmCondition::SignedLess;
                     let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
                         false, false, false, true,
                     ));
@@ -408,8 +408,8 @@ mod tests {
                 }
 
                 #[test]
-                fn signed_lesser_eq() {
-                    let condition = ArmCondition::SignedLesserEq;
+                fn signed_less_eq() {
+                    let condition = ArmCondition::SignedLessEq;
                     let true_case_zero = build_cpu(CurrentProgramStatusRegister::with_values(
                         false, true, false, false,
                     ));
