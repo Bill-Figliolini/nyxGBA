@@ -8,7 +8,7 @@ impl Bitfield {
         Self(input)
     }
 
-    pub(crate) fn inner(self) -> u32 {
+    pub(crate) fn value(self) -> u32 {
         self.0
     }
 
@@ -16,7 +16,7 @@ impl Bitfield {
         self.0 = input;
     }
 
-    pub(crate) fn get_field(self, index: u32) -> bool {
+    pub(crate) fn bit(self, index: u32) -> bool {
         debug_assert!(index < 32);
         self.0 & (1 << index) != 0
     }
@@ -55,7 +55,7 @@ mod tests {
         for i in 0..32 {
             let bitfield = Bitfield::new(1 << i);
 
-            assert!(bitfield.get_field(i));
+            assert!(bitfield.bit(i));
         }
     }
     #[test]
@@ -65,7 +65,7 @@ mod tests {
 
             bitfield.set_field(i, true);
 
-            assert!(bitfield.get_field(i));
+            assert!(bitfield.bit(i));
         }
     }
     #[test]
@@ -75,7 +75,7 @@ mod tests {
 
             bitfield.set_field(i, false);
 
-            assert!(!bitfield.get_field(i));
+            assert!(!bitfield.bit(i));
         }
     }
 

@@ -68,33 +68,23 @@ impl Cpu {
 
     fn check(&self, condition: ArmCondition) -> bool {
         match condition {
-            ArmCondition::Equal => self.cpsr.get_zero_flag(),
-            ArmCondition::NotEqual => !self.cpsr.get_zero_flag(),
-            ArmCondition::CarrySet => self.cpsr.get_carry_flag(),
-            ArmCondition::CarryCleared => !self.cpsr.get_carry_flag(),
-            ArmCondition::Minus => self.cpsr.get_signed_flag(),
-            ArmCondition::Plus => !self.cpsr.get_signed_flag(),
-            ArmCondition::SignedOverflow => self.cpsr.get_overflow_flag(),
-            ArmCondition::NoSignedOverflow => !self.cpsr.get_overflow_flag(),
-            ArmCondition::UnsignedHigher => {
-                self.cpsr.get_carry_flag() && !self.cpsr.get_zero_flag()
-            }
-            ArmCondition::UnsignedLowerOrSame => {
-                !self.cpsr.get_carry_flag() || self.cpsr.get_zero_flag()
-            }
-            ArmCondition::SignedGreaterEq => {
-                self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag()
-            }
-            ArmCondition::SignedLesser => {
-                self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag()
-            }
+            ArmCondition::Equal => self.cpsr.zero(),
+            ArmCondition::NotEqual => !self.cpsr.zero(),
+            ArmCondition::CarrySet => self.cpsr.carry(),
+            ArmCondition::CarryCleared => !self.cpsr.carry(),
+            ArmCondition::Minus => self.cpsr.signed(),
+            ArmCondition::Plus => !self.cpsr.signed(),
+            ArmCondition::SignedOverflow => self.cpsr.overflow(),
+            ArmCondition::NoSignedOverflow => !self.cpsr.overflow(),
+            ArmCondition::UnsignedHigher => self.cpsr.carry() && !self.cpsr.zero(),
+            ArmCondition::UnsignedLowerOrSame => !self.cpsr.carry() || self.cpsr.zero(),
+            ArmCondition::SignedGreaterEq => self.cpsr.signed() == self.cpsr.overflow(),
+            ArmCondition::SignedLesser => self.cpsr.signed() != self.cpsr.overflow(),
             ArmCondition::SignedGreater => {
-                !self.cpsr.get_zero_flag()
-                    && (self.cpsr.get_signed_flag() == self.cpsr.get_overflow_flag())
+                !self.cpsr.zero() && (self.cpsr.signed() == self.cpsr.overflow())
             }
             ArmCondition::SignedLesserEq => {
-                self.cpsr.get_zero_flag()
-                    || (self.cpsr.get_signed_flag() != self.cpsr.get_overflow_flag())
+                self.cpsr.zero() || (self.cpsr.signed() != self.cpsr.overflow())
             }
             ArmCondition::Always => true,
             ArmCondition::Never => false,

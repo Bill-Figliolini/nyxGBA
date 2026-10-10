@@ -6,17 +6,17 @@ pub(in crate::gba::memory) struct Ram {
     memory: Vec<u8>,
 }
 
-pub(in crate::gba::memory) const ONCHIPRAMSIZE: u32 = 0x8000;
-pub(in crate::gba::memory) const ONCHIPRAMMASK: u32 = ONCHIPRAMSIZE - 1;
-pub(in crate::gba::memory) const ONBOARDRAMSIZE: u32 = 0x4_0000;
-pub(in crate::gba::memory) const ONBOARDRAMMASK: u32 = ONBOARDRAMSIZE - 1;
+pub(in crate::gba::memory) const ON_CHIP_RAM_SIZE: u32 = 0x8000;
+pub(in crate::gba::memory) const ON_CHIP_RAM_MASK: u32 = ON_CHIP_RAM_SIZE - 1;
+pub(in crate::gba::memory) const ON_BOARD_RAM_SIZE: u32 = 0x4_0000;
+pub(in crate::gba::memory) const ON_BOARD_RAM_MASK: u32 = ON_BOARD_RAM_SIZE - 1;
 
 impl Ram {
     pub(in crate::gba::memory) fn initialize_on_chip() -> Self {
-        Ram::initialize(u32_to_usize(ONCHIPRAMSIZE))
+        Ram::initialize(u32_to_usize(ON_CHIP_RAM_SIZE))
     }
     pub(in crate::gba::memory) fn initialize_on_board() -> Self {
-        Ram::initialize(u32_to_usize(ONBOARDRAMSIZE))
+        Ram::initialize(u32_to_usize(ON_BOARD_RAM_SIZE))
     }
     fn initialize(size: usize) -> Self {
         Self {

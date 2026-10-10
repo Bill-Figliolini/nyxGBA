@@ -46,11 +46,10 @@ impl Cpu {
             .overflowing_add(r_value.cast_signed())
             .1;
         if set_flag {
-            self.cpsr.set_zero_flag(result == 0);
-            self.cpsr
-                .set_signed_flag(result.cast_signed().is_negative());
-            self.cpsr.set_carry_flag(carry);
-            self.cpsr.set_overflow_flag(overflow);
+            self.cpsr.set_zero(result == 0);
+            self.cpsr.set_signed(result.cast_signed().is_negative());
+            self.cpsr.set_carry(carry);
+            self.cpsr.set_overflow(overflow);
         }
 
         self.write(destination, result);
@@ -94,7 +93,7 @@ mod tests {
             cpu.arm_exec(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
-            assert!(cpu.cpsr.get_carry_flag());
+            assert!(cpu.cpsr.carry());
         }
 
         #[test]
@@ -116,7 +115,7 @@ mod tests {
             cpu.arm_exec(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
-            assert!(cpu.cpsr.get_zero_flag());
+            assert!(cpu.cpsr.zero());
         }
         #[test]
         fn set_overflow_flag_on_signed_overflow() {
@@ -136,7 +135,7 @@ mod tests {
 
             cpu.arm_exec(instr, &mut bus);
 
-            assert!(cpu.cpsr.get_overflow_flag());
+            assert!(cpu.cpsr.overflow());
         }
         #[test]
         fn do_not_set_overflow_flag_on_negative_addition() {
@@ -157,7 +156,7 @@ mod tests {
 
             cpu.arm_exec(instr, &mut bus);
 
-            assert!(!cpu.cpsr.get_overflow_flag());
+            assert!(!cpu.cpsr.overflow());
         }
         #[test]
         fn set_overflow_flag_on_overflow() {
@@ -177,7 +176,7 @@ mod tests {
 
             cpu.arm_exec(instr, &mut bus);
 
-            assert!(cpu.cpsr.get_overflow_flag());
+            assert!(cpu.cpsr.overflow());
         }
     }
 }

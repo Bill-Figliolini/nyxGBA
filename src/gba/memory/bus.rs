@@ -6,7 +6,7 @@ use crate::gba::{
     bitmanip::Bitfield,
     memory::{
         Address,
-        ram::{ONBOARDRAMMASK, ONCHIPRAMMASK, Ram},
+        ram::{ON_BOARD_RAM_MASK, ON_CHIP_RAM_MASK, Ram},
         rom::Rom,
     },
 };
@@ -54,11 +54,11 @@ impl MemoryBus {
         0
     }
     fn board_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & ONBOARDRAMMASK;
+        let address = address.0 & ON_BOARD_RAM_MASK;
         self.board_memory.read(address, width)
     }
     fn chip_memory_read(&self, address: Address, width: BusWidth) -> u32 {
-        let address = address.0 & ONCHIPRAMMASK;
+        let address = address.0 & ON_CHIP_RAM_MASK;
         self.chip_memory.read(address, width)
     }
     fn io_memory_read() -> u32 {
@@ -84,11 +84,11 @@ impl MemoryBus {
         0
     }
     fn board_memory_write(&mut self, address: Address, width: BusWidth, value: u32) {
-        let address = address.0 & ONBOARDRAMMASK;
+        let address = address.0 & ON_BOARD_RAM_MASK;
         self.board_memory.write(address, width, value);
     }
     fn chip_memory_write(&mut self, address: Address, width: BusWidth, value: u32) {
-        let address = address.0 & ONCHIPRAMMASK;
+        let address = address.0 & ON_CHIP_RAM_MASK;
         self.chip_memory.write(address, width, value);
     }
     fn io_memory_write() {}
@@ -134,8 +134,8 @@ impl Bus for MemoryBus {
     fn write(&mut self, address: Address, width: BusWidth, value: Bitfield) {
         match address.0 {
             //General
-            0x0200_0000..=0x02FF_FFFF => self.board_memory_write(address, width, value.inner()),
-            0x0300_0000..=0x03FF_FFFF => self.chip_memory_write(address, width, value.inner()),
+            0x0200_0000..=0x02FF_FFFF => self.board_memory_write(address, width, value.value()),
+            0x0300_0000..=0x03FF_FFFF => self.chip_memory_write(address, width, value.value()),
             0x0400_0000..=0x0400_03FE => MemoryBus::io_memory_write(),
 
             //Display

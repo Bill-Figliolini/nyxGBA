@@ -12,10 +12,10 @@ impl CurrentProgramStatusRegister {
     #[allow(clippy::fn_params_excessive_bools, reason = "Testing purposes")]
     pub(crate) fn with_values(signed: bool, zero: bool, carry: bool, overflow: bool) -> Self {
         let mut flags = Self(Bitfield::new(0));
-        flags.set_signed_flag(signed);
-        flags.set_zero_flag(zero);
-        flags.set_carry_flag(carry);
-        flags.set_overflow_flag(overflow);
+        flags.set_signed(signed);
+        flags.set_zero(zero);
+        flags.set_carry(carry);
+        flags.set_overflow(overflow);
         flags
     }
     pub(crate) fn reset(&mut self) {
@@ -27,28 +27,28 @@ impl CurrentProgramStatusRegister {
     // zero
     // carry
     // overflow
-    pub(crate) fn get_signed_flag(self) -> bool {
-        self.0.get_field(31)
+    pub(crate) fn signed(self) -> bool {
+        self.0.bit(31)
     }
-    pub(crate) fn set_signed_flag(&mut self, val: bool) {
+    pub(crate) fn set_signed(&mut self, val: bool) {
         self.0.set_field(31, val);
     }
-    pub(crate) fn get_zero_flag(self) -> bool {
-        self.0.get_field(30)
+    pub(crate) fn zero(self) -> bool {
+        self.0.bit(30)
     }
-    pub(crate) fn set_zero_flag(&mut self, val: bool) {
+    pub(crate) fn set_zero(&mut self, val: bool) {
         self.0.set_field(30, val);
     }
-    pub(crate) fn get_carry_flag(self) -> bool {
-        self.0.get_field(29)
+    pub(crate) fn carry(self) -> bool {
+        self.0.bit(29)
     }
-    pub(crate) fn set_carry_flag(&mut self, val: bool) {
+    pub(crate) fn set_carry(&mut self, val: bool) {
         self.0.set_field(29, val);
     }
-    pub(crate) fn get_overflow_flag(self) -> bool {
-        self.0.get_field(28)
+    pub(crate) fn overflow(self) -> bool {
+        self.0.bit(28)
     }
-    pub(crate) fn set_overflow_flag(&mut self, val: bool) {
+    pub(crate) fn set_overflow(&mut self, val: bool) {
         self.0.set_field(28, val);
     }
 }
@@ -62,33 +62,33 @@ mod tests {
         fn signed_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_signed_flag(true);
+            flags.set_signed(true);
 
-            assert!(flags.get_signed_flag());
+            assert!(flags.signed());
         }
         #[test]
         fn zero_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_zero_flag(true);
+            flags.set_zero(true);
 
-            assert!(flags.get_zero_flag());
+            assert!(flags.zero());
         }
         #[test]
         fn carry_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_carry_flag(true);
+            flags.set_carry(true);
 
-            assert!(flags.get_carry_flag());
+            assert!(flags.carry());
         }
         #[test]
         fn overflow_is_correct_bit() {
             let mut flags = CurrentProgramStatusRegister::new();
 
-            flags.set_overflow_flag(true);
+            flags.set_overflow(true);
 
-            assert!(flags.get_overflow_flag());
+            assert!(flags.overflow());
         }
     }
 }
