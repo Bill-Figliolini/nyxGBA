@@ -56,12 +56,6 @@ impl Cpu {
     }
 }
 
-//TODO:
-// Add tests for add. 5 cases:
-// set_flag on, standard
-// set_flag off, standard, existing flags
-// set_flag on,
-// set_flag on, 0 result
 #[cfg(test)]
 mod tests {
     use super::*;
