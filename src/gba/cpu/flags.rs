@@ -39,6 +39,10 @@ impl CurrentProgramStatusRegister {
     pub(crate) fn set_zero(&mut self, val: bool) {
         self.0.set_bit(30, val);
     }
+    pub(crate) fn set_nz(&mut self, val: u32) {
+        self.set_negative(val >> 31 == 1);
+        self.set_zero(val == 0);
+    }
     pub(crate) fn carry(self) -> bool {
         self.0.bit(29)
     }
@@ -89,6 +93,49 @@ mod tests {
             flags.set_overflow(true);
 
             assert!(flags.overflow());
+        }
+    }
+    mod nz_logic {
+        use super::*;
+        #[test]
+        fn sets_on_zero() {
+            let val = 0;
+            let mut flags = CurrentProgramStatusRegister::new();
+
+            flags.set_nz(val);
+
+            assert!(flags.zero());
+            assert!(!flags.negative());
+        }
+        #[test]
+        fn sets_on_smallest_neg() {
+            let val = 0x8000_0000;
+            let mut flags = CurrentProgramStatusRegister::new();
+
+            flags.set_nz(val);
+
+            assert!(!flags.zero());
+            assert!(flags.negative());
+        }
+        #[test]
+        fn does_not_set_on_largest_positive() {
+            let val = 0x7FFF_FFFF;
+            let mut flags = CurrentProgramStatusRegister::new();
+
+            flags.set_nz(val);
+
+            assert!(!flags.zero());
+            assert!(!flags.negative());
+        }
+        #[test]
+        fn clears_existing_flags() {
+            let val = 1;
+            let mut flags = CurrentProgramStatusRegister::with_values(true, true, false, false);
+
+            flags.set_nz(val);
+
+            assert!(!flags.zero());
+            assert!(!flags.negative());
         }
     }
 }

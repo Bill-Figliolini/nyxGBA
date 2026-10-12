@@ -46,8 +46,7 @@ impl Cpu {
             .overflowing_add(r_value.cast_signed())
             .1;
         if set_flag {
-            self.cpsr.set_zero(result == 0);
-            self.cpsr.set_negative(result.cast_signed().is_negative());
+            self.cpsr.set_nz(result);
             self.cpsr.set_carry(carry);
             self.cpsr.set_overflow(overflow);
         }
