@@ -1,8 +1,17 @@
 use crate::gba::cpu::Register;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub(crate) struct ArmInstruction {
     pub condition: ArmCondition,
+    pub kind: ArmKind,
+}
+#[derive(Debug, Clone, Copy)]
+pub(crate) enum ArmKind {
+    DataProcessing(DataProcessing),
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct DataProcessing {
     pub op_code: ArmOpCode,
     pub set_flag: bool,
     pub destination_reg: Register,
@@ -57,14 +66,14 @@ impl ArmCondition {
         }
     }
 }
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmOpCode {
     Mov,
     Add,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 #[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum SourceOperand {
     Immediate(u32),

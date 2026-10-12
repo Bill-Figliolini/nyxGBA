@@ -1,6 +1,3 @@
-//! # fileio
-//! Handles conversion from raw bites into bitfields
-
 use std::{fs::File, io::Read, path::Path};
 
 use anyhow::{Context, anyhow};

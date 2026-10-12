@@ -3,7 +3,7 @@ use crate::gba::{
     clock::Time,
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
     instructions::{
-        arm::{ArmCondition, ArmInstruction},
+        arm::{ArmCondition, ArmInstruction, SourceOperand},
         parse_arm,
     },
     memory::{Address, Bus, BusWidth},
@@ -40,7 +40,7 @@ impl Cpu {
 
     pub(super) fn arm_exec(&mut self, instruction: ArmInstruction, bus: &mut impl Bus) -> Time {
         if self.check(instruction.condition) {
-            self.run_arm(instruction, bus);
+            self.run_arm(instruction.kind, bus);
         }
         Time(0)
     }
@@ -90,6 +90,12 @@ impl Cpu {
             ArmCondition::Never => false,
         }
     }
+    pub(crate) fn operand_value(&self, operand: SourceOperand) -> u32 {
+        match operand {
+            SourceOperand::Immediate(val) => val,
+            SourceOperand::Register(register) => self.read(register),
+        }
+    }
 }
 
 #[cfg(test)]
@@ -101,7 +107,9 @@ mod tests {
         mod arm {
             use super::*;
             use crate::gba::{
-                instructions::arm::{ArmCondition, ArmInstruction, ArmOpCode, SourceOperand},
+                instructions::arm::{
+                    ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand,
+                },
                 memory::TestBus,
             };
             fn make_test_bus() -> TestBus {
@@ -118,11 +126,13 @@ mod tests {
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = ArmInstruction {
                     condition: ArmCondition::Always,
-                    op_code: ArmOpCode::Mov,
-                    set_flag: false,
-                    destination_reg: register,
-                    read_reg,
-                    source: operand,
+                    kind: ArmKind::DataProcessing(DataProcessing {
+                        op_code: ArmOpCode::Mov,
+                        set_flag: false,
+                        destination_reg: register,
+                        read_reg,
+                        source: operand,
+                    }),
                 };
 
                 cpu.arm_exec(instruction, &mut bus);
@@ -143,11 +153,13 @@ mod tests {
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = ArmInstruction {
                     condition: ArmCondition::Always,
-                    op_code: ArmOpCode::Mov,
-                    set_flag: false,
-                    destination_reg: register,
-                    read_reg,
-                    source: operand,
+                    kind: ArmKind::DataProcessing(DataProcessing {
+                        op_code: ArmOpCode::Mov,
+                        set_flag: false,
+                        destination_reg: register,
+                        read_reg,
+                        source: operand,
+                    }),
                 };
                 cpu.arm_exec(instruction, &mut bus);
 

@@ -1,44 +1,45 @@
 use crate::gba::{
     cpu::cpu_impl::Cpu,
-    instructions::arm::{ArmInstruction, ArmOpCode, SourceOperand},
+    instructions::arm::{ArmKind, ArmOpCode, DataProcessing},
     memory::Bus,
 };
 
 impl Cpu {
-    pub(super) fn run_arm(&mut self, arm: ArmInstruction, _bus: &mut impl Bus) {
-        match arm.op_code {
-            ArmOpCode::Mov => self.arm_mov(arm),
-            ArmOpCode::Add => self.arm_add(arm),
+    pub(super) fn run_arm(&mut self, arm: ArmKind, _bus: &mut impl Bus) {
+        match arm {
+            ArmKind::DataProcessing(data_processing) => {
+                self.run_data_processing(data_processing);
+            }
         }
     }
-    fn arm_mov(&mut self, command: ArmInstruction) {
-        let ArmInstruction {
-            condition: _,
-            op_code: _,
-            set_flag: _,
+    fn run_data_processing(&mut self, instr: DataProcessing) {
+        match instr.op_code {
+            ArmOpCode::Mov => self.arm_mov(instr),
+            ArmOpCode::Add => self.arm_add(instr),
+        }
+    }
+    fn arm_mov(&mut self, command: DataProcessing) {
+        let DataProcessing {
+            set_flag,
             destination_reg: destination,
-            read_reg: _,
             source,
+            ..
         } = command;
-        let value = match source {
-            SourceOperand::Immediate(val) => val,
-            SourceOperand::Register(register) => self.read(register),
-        };
+        let value = self.operand_value(source);
+        if set_flag {
+            self.cpsr.set_nz(value);
+        }
         self.write(destination, value);
     }
-    fn arm_add(&mut self, command: ArmInstruction) {
-        let ArmInstruction {
-            condition: _,
-            op_code: _,
+    fn arm_add(&mut self, command: DataProcessing) {
+        let DataProcessing {
             set_flag,
             destination_reg: destination,
             read_reg: read,
             source,
+            ..
         } = command;
-        let r_value = match source {
-            SourceOperand::Immediate(val) => val,
-            SourceOperand::Register(register) => self.read(register),
-        };
+        let r_value = self.operand_value(source);
         let l_value = self.read(read);
         let (result, carry) = l_value.overflowing_add(r_value);
         let overflow = l_value
@@ -58,8 +59,64 @@ impl Cpu {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gba::{
+        cpu::Register,
+        instructions::arm::{ArmCondition, ArmInstruction, SourceOperand},
+        memory::TestBus,
+    };
+    mod mov {
+        use super::*;
+
+        fn make_test_bus() -> TestBus {
+            TestBus::new(vec![], vec![])
+        }
+
+        fn mov_instr(set_flag: bool, value: u32) -> ArmInstruction {
+            ArmInstruction {
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Mov,
+                    set_flag,
+                    destination_reg: Register::R1,
+                    read_reg: Register::R0,
+                    source: SourceOperand::Immediate(value),
+                }),
+            }
+        }
+
+        #[test]
+        fn set_zero_flag_on_zero() {
+            let mut cpu = Cpu::new();
+            let mut bus = make_test_bus();
+
+            cpu.arm_exec(mov_instr(true, 0), &mut bus);
+
+            assert_eq!(cpu.read(Register::R1), 0);
+            assert!(cpu.cpsr.zero());
+            assert!(!cpu.cpsr.negative());
+        }
+        #[test]
+        fn set_negative_flag_on_high_bit() {
+            let mut cpu = Cpu::new();
+            let mut bus = make_test_bus();
+
+            cpu.arm_exec(mov_instr(true, 0x8000_0000), &mut bus);
+
+            assert!(cpu.cpsr.negative());
+            assert!(!cpu.cpsr.zero());
+        }
+        #[test]
+        fn do_not_set_flags_without_set_flag() {
+            let mut cpu = Cpu::new();
+            let mut bus = make_test_bus();
+
+            cpu.arm_exec(mov_instr(false, 0), &mut bus);
+
+            assert!(!cpu.cpsr.zero());
+            assert!(!cpu.cpsr.negative());
+        }
+    }
     mod add {
-        use crate::gba::{cpu::Register, instructions, memory::TestBus};
 
         use super::*;
 
@@ -75,12 +132,14 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, u32::MAX);
             let instr = ArmInstruction {
-                condition: instructions::arm::ArmCondition::Always,
-                op_code: ArmOpCode::Add,
-                set_flag: true,
-                destination_reg: dest,
-                read_reg: reg,
-                source: SourceOperand::Immediate(1),
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg: dest,
+                    read_reg: reg,
+                    source: SourceOperand::Immediate(1),
+                }),
             };
 
             cpu.arm_exec(instr, &mut bus);
@@ -97,12 +156,14 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, 0);
             let instr = ArmInstruction {
-                condition: instructions::arm::ArmCondition::Always,
-                op_code: ArmOpCode::Add,
-                set_flag: true,
-                destination_reg: dest,
-                read_reg: reg,
-                source: SourceOperand::Immediate(0),
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg: dest,
+                    read_reg: reg,
+                    source: SourceOperand::Immediate(0),
+                }),
             };
 
             cpu.arm_exec(instr, &mut bus);
@@ -118,12 +179,14 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, i32::MAX.cast_unsigned());
             let instr = ArmInstruction {
-                condition: instructions::arm::ArmCondition::Always,
-                op_code: ArmOpCode::Add,
-                set_flag: true,
-                destination_reg: dest,
-                read_reg: reg,
-                source: SourceOperand::Immediate(1),
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg: dest,
+                    read_reg: reg,
+                    source: SourceOperand::Immediate(1),
+                }),
             };
 
             cpu.arm_exec(instr, &mut bus);
@@ -139,12 +202,14 @@ mod tests {
             let val: i32 = -1;
             cpu.write(reg, val.cast_unsigned());
             let instr = ArmInstruction {
-                condition: instructions::arm::ArmCondition::Always,
-                op_code: ArmOpCode::Add,
-                set_flag: true,
-                destination_reg: dest,
-                read_reg: reg,
-                source: SourceOperand::Immediate(val.cast_unsigned()),
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg: dest,
+                    read_reg: reg,
+                    source: SourceOperand::Immediate(val.cast_unsigned()),
+                }),
             };
 
             cpu.arm_exec(instr, &mut bus);
@@ -159,12 +224,14 @@ mod tests {
             let reg = Register::R0;
             cpu.write(reg, 0x8000_0000);
             let instr = ArmInstruction {
-                condition: instructions::arm::ArmCondition::Always,
-                op_code: ArmOpCode::Add,
-                set_flag: true,
-                destination_reg: dest,
-                read_reg: reg,
-                source: SourceOperand::Immediate(0x8000_0000),
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg: dest,
+                    read_reg: reg,
+                    source: SourceOperand::Immediate(0x8000_0000),
+                }),
             };
 
             cpu.arm_exec(instr, &mut bus);

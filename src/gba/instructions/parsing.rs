@@ -4,7 +4,9 @@
 use crate::gba::{
     bitmanip::Bitfield,
     cpu::Register,
-    instructions::arm::{ArmCondition, ArmInstruction, ArmOpCode, SourceOperand},
+    instructions::arm::{
+        ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand,
+    },
 };
 
 pub(crate) fn parse_arm(input: Bitfield) -> ArmInstruction {
@@ -15,10 +17,12 @@ pub(crate) fn parse_arm(input: Bitfield) -> ArmInstruction {
     let operand = SourceOperand::Immediate(value);
     ArmInstruction {
         condition,
-        op_code: ArmOpCode::Mov,
-        set_flag: false,
-        destination_reg: register,
-        read_reg,
-        source: operand,
+        kind: ArmKind::DataProcessing(DataProcessing {
+            op_code: ArmOpCode::Mov,
+            set_flag: false,
+            destination_reg: register,
+            read_reg,
+            source: operand,
+        }),
     }
 }
