@@ -179,12 +179,9 @@ mod tests {
                 #[test]
                 fn equal() {
                     let condition = ArmCondition::Equal;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().zero().build());
+                    let false_case = build_cpu(CurrentProgramStatusRegister::new());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -193,12 +190,9 @@ mod tests {
                 #[test]
                 fn not_equal() {
                     let condition = ArmCondition::NotEqual;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, false, false,
-                    ));
+                    let true_case = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().zero().build());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -207,12 +201,9 @@ mod tests {
                 #[test]
                 fn carry_set() {
                     let condition = ArmCondition::CarrySet;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, true, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().carry().build());
+                    let false_case = build_cpu(CurrentProgramStatusRegister::new());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -221,12 +212,9 @@ mod tests {
                 #[test]
                 fn carry_cleared() {
                     let condition = ArmCondition::CarryCleared;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, true, false,
-                    ));
+                    let true_case = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().carry().build());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -235,12 +223,9 @@ mod tests {
                 #[test]
                 fn minus() {
                     let condition = ArmCondition::Minus;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
+                    let false_case = build_cpu(CurrentProgramStatusRegister::new());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -249,12 +234,9 @@ mod tests {
                 #[test]
                 fn positive() {
                     let condition = ArmCondition::Plus;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
+                    let true_case = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -263,12 +245,9 @@ mod tests {
                 #[test]
                 fn signed_overflow() {
                     let condition = ArmCondition::SignedOverflow;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
+                    let false_case = build_cpu(CurrentProgramStatusRegister::new());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -277,12 +256,9 @@ mod tests {
                 #[test]
                 fn no_signed_overflow() {
                     let condition = ArmCondition::NoSignedOverflow;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
+                    let true_case = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case.check(condition));
@@ -291,9 +267,8 @@ mod tests {
                 #[test]
                 fn always() {
                     let condition = ArmCondition::Always;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
 
                     assert!(true_case.check(condition));
                 }
@@ -301,9 +276,8 @@ mod tests {
                 #[test]
                 fn never() {
                     let condition = ArmCondition::Never;
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
 
                     assert!(!false_case.check(condition));
                 }
@@ -312,15 +286,15 @@ mod tests {
                 #[test]
                 fn unsigned_higher() {
                     let condition = ArmCondition::UnsignedHigher;
-                    let true_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, true, false,
-                    ));
-                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, true, false,
-                    ));
-                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
+                    let true_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().carry().build());
+                    let false_case_1 = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .zero()
+                            .carry()
+                            .build(),
+                    );
+                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::new());
 
                     assert!(true_case.check(condition));
                     assert!(!false_case_1.check(condition));
@@ -330,18 +304,17 @@ mod tests {
                 #[test]
                 fn unsigned_lower_or_same() {
                     let condition = ArmCondition::UnsignedLowerOrSame;
-                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, true, false,
-                    ));
-                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let true_case_3 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, false, false,
-                    ));
-                    let false_case = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, true, false,
-                    ));
+                    let true_case_1 = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .zero()
+                            .carry()
+                            .build(),
+                    );
+                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::new());
+                    let true_case_3 =
+                        build_cpu(CurrentProgramStatusRegister::builder().zero().build());
+                    let false_case =
+                        build_cpu(CurrentProgramStatusRegister::builder().carry().build());
 
                     assert!(true_case_1.check(condition));
                     assert!(true_case_2.check(condition));
@@ -352,18 +325,17 @@ mod tests {
                 #[test]
                 fn signed_greater_eq() {
                     let condition = ArmCondition::SignedGreaterEq;
-                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let true_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, true,
-                    ));
-                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
-                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
+                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::new());
+                    let true_case_neg = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .negative()
+                            .overflow()
+                            .build(),
+                    );
+                    let false_case_1 =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
+                    let false_case_2 =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
 
                     assert!(true_case_pos.check(condition));
                     assert!(true_case_neg.check(condition));
@@ -374,18 +346,17 @@ mod tests {
                 #[test]
                 fn signed_less() {
                     let condition = ArmCondition::SignedLess;
-                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
-                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
-                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, true,
-                    ));
+                    let true_case_1 =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
+                    let true_case_2 =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
+                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case_neg = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .negative()
+                            .overflow()
+                            .build(),
+                    );
 
                     assert!(true_case_1.check(condition));
                     assert!(true_case_2.check(condition));
@@ -396,21 +367,19 @@ mod tests {
                 #[test]
                 fn signed_greater() {
                     let condition = ArmCondition::SignedGreater;
-                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let true_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, true,
-                    ));
-                    let false_case_zero = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, false, false,
-                    ));
-                    let false_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
-                    let false_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
+                    let true_case_pos = build_cpu(CurrentProgramStatusRegister::new());
+                    let true_case_neg = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .negative()
+                            .overflow()
+                            .build(),
+                    );
+                    let false_case_zero =
+                        build_cpu(CurrentProgramStatusRegister::builder().zero().build());
+                    let false_case_1 =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
+                    let false_case_2 =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
 
                     assert!(true_case_pos.check(condition));
                     assert!(true_case_neg.check(condition));
@@ -422,24 +391,25 @@ mod tests {
                 #[test]
                 fn signed_less_eq() {
                     let condition = ArmCondition::SignedLessEq;
-                    let true_case_zero = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, true, false, false,
-                    ));
-                    let true_case_1 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, true,
-                    ));
-                    let true_case_2 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, false,
-                    ));
-                    let true_case_3 = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, true, false, false,
-                    ));
-                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::with_values(
-                        false, false, false, false,
-                    ));
-                    let false_case_neg = build_cpu(CurrentProgramStatusRegister::with_values(
-                        true, false, false, true,
-                    ));
+                    let true_case_zero =
+                        build_cpu(CurrentProgramStatusRegister::builder().zero().build());
+                    let true_case_1 =
+                        build_cpu(CurrentProgramStatusRegister::builder().overflow().build());
+                    let true_case_2 =
+                        build_cpu(CurrentProgramStatusRegister::builder().negative().build());
+                    let true_case_3 = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .negative()
+                            .zero()
+                            .build(),
+                    );
+                    let false_case_pos = build_cpu(CurrentProgramStatusRegister::new());
+                    let false_case_neg = build_cpu(
+                        CurrentProgramStatusRegister::builder()
+                            .negative()
+                            .overflow()
+                            .build(),
+                    );
 
                     assert!(true_case_zero.check(condition));
                     assert!(true_case_1.check(condition));

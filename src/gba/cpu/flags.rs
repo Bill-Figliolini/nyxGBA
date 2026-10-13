@@ -8,16 +8,6 @@ impl CurrentProgramStatusRegister {
         Self(Bitfield::new(0))
     }
 
-    #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
-    #[allow(clippy::fn_params_excessive_bools, reason = "Testing purposes")]
-    pub(crate) fn with_values(negative: bool, zero: bool, carry: bool, overflow: bool) -> Self {
-        let mut flags = Self(Bitfield::new(0));
-        flags.set_negative(negative);
-        flags.set_zero(zero);
-        flags.set_carry(carry);
-        flags.set_overflow(overflow);
-        flags
-    }
     pub(crate) fn reset(&mut self) {
         self.0.set_value(0);
     }
@@ -54,6 +44,40 @@ impl CurrentProgramStatusRegister {
     }
     pub(crate) fn set_overflow(&mut self, val: bool) {
         self.0.set_bit(28, val);
+    }
+}
+
+#[cfg(test)]
+#[derive(Debug)]
+pub(in crate::gba::cpu) struct CPSRBuilder(CurrentProgramStatusRegister);
+
+#[cfg(test)]
+impl CurrentProgramStatusRegister {
+    pub(crate) fn builder() -> CPSRBuilder {
+        CPSRBuilder(CurrentProgramStatusRegister::new())
+    }
+}
+
+#[cfg(test)]
+impl CPSRBuilder {
+    pub(crate) fn negative(mut self) -> Self {
+        self.0.set_negative(true);
+        self
+    }
+    pub(crate) fn zero(mut self) -> Self {
+        self.0.set_zero(true);
+        self
+    }
+    pub(crate) fn carry(mut self) -> Self {
+        self.0.set_carry(true);
+        self
+    }
+    pub(crate) fn overflow(mut self) -> Self {
+        self.0.set_overflow(true);
+        self
+    }
+    pub(crate) fn build(self) -> CurrentProgramStatusRegister {
+        self.0
     }
 }
 
@@ -130,7 +154,10 @@ mod tests {
         #[test]
         fn clears_existing_flags() {
             let val = 1;
-            let mut flags = CurrentProgramStatusRegister::with_values(true, true, false, false);
+            let mut flags = CurrentProgramStatusRegister::builder()
+                .zero()
+                .negative()
+                .build();
 
             flags.set_nz(val);
 
