@@ -1,6 +1,6 @@
 use crate::gba::{
     cpu::cpu_impl::Cpu,
-    instructions::arm::{ArmKind, ArmOpCode, DataProcessing},
+    instructions::{ArmKind, ArmOpCode, DataProcessing},
     memory::Bus,
 };
 
@@ -61,7 +61,7 @@ mod tests {
     use super::*;
     use crate::gba::{
         cpu::Register,
-        instructions::arm::{ArmCondition, ArmInstruction, SourceOperand},
+        instructions::{ArmCondition, ArmInstruction, SourceOperand},
         memory::TestBus,
     };
     mod mov {

@@ -2,10 +2,7 @@ use crate::gba::{
     bitmanip::Bitfield,
     clock::Time,
     cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
-    instructions::{
-        arm::{ArmCondition, ArmInstruction, SourceOperand},
-        parse_arm,
-    },
+    instructions::{ArmCondition, ArmInstruction, SourceOperand, parse_arm},
     memory::{Address, Bus, BusWidth},
 };
 
@@ -107,7 +104,7 @@ mod tests {
         mod arm {
             use super::*;
             use crate::gba::{
-                instructions::arm::{
+                instructions::{
                     ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand,
                 },
                 memory::TestBus,

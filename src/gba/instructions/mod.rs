@@ -1,4 +1,7 @@
-pub(crate) mod arm;
+mod arm;
 mod parsing;
 
-pub(crate) use parsing::parse_arm;
+pub(crate) use {
+    arm::{ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand},
+    parsing::parse_arm,
+};
