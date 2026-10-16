@@ -67,7 +67,6 @@ impl ArmCondition {
     }
 }
 #[derive(Debug, Clone, Copy)]
-#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
 pub(crate) enum ArmOpCode {
     Mov,
     Add,

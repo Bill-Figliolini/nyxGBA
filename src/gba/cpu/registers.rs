@@ -1,8 +1,9 @@
 use std::ops::{Index, IndexMut};
 
-#[derive(Debug, Clone, Copy)]
+use crate::gba::bitmanip::Bitfield;
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 #[repr(u8)]
-#[expect(dead_code, reason = "To be used later")]
 pub(crate) enum Register {
     R0 = 0,
     R1 = 1,
@@ -20,6 +21,31 @@ pub(crate) enum Register {
     R13 = 13,
     R14 = 14,
     R15 = 15,
+}
+
+impl Register {
+    pub(crate) fn from_bits(input: Bitfield, start: u32) -> Self {
+        let bits = input.bits(start, 4);
+        match bits {
+            0 => Register::R0,
+            1 => Register::R1,
+            2 => Register::R2,
+            3 => Register::R3,
+            4 => Register::R4,
+            5 => Register::R5,
+            6 => Register::R6,
+            7 => Register::R7,
+            8 => Register::R8,
+            9 => Register::R9,
+            10 => Register::R10,
+            11 => Register::R11,
+            12 => Register::R12,
+            13 => Register::R13,
+            14 => Register::R14,
+            15 => Register::R15,
+            _ => unreachable!(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -60,5 +86,41 @@ impl IndexMut<Register> for Registers {
             reason = "Register uses u8 repr, which can infallibly convert to usize"
         )]
         &mut self.general_purpose[reg as usize]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const ALL: [Register; 16] = [
+        Register::R0,
+        Register::R1,
+        Register::R2,
+        Register::R3,
+        Register::R4,
+        Register::R5,
+        Register::R6,
+        Register::R7,
+        Register::R8,
+        Register::R9,
+        Register::R10,
+        Register::R11,
+        Register::R12,
+        Register::R13,
+        Register::R14,
+        Register::R15,
+    ];
+    mod register {
+        use super::*;
+        #[test]
+        fn all_values_produced() {
+            let registers = ALL.to_vec();
+
+            for (i, register) in registers.into_iter().enumerate() {
+                let i: u32 = i.try_into().unwrap();
+                let bits = Bitfield::new(i);
+                assert_eq!(Register::from_bits(bits, 0), register);
+            }
+        }
     }
 }

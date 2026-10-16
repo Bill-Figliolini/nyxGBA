@@ -13,8 +13,8 @@ pub(crate) fn parse_arm(input: Bitfield) -> ArmInstruction {
     let condition = ArmCondition::new(input.bits(28, 4));
     let op_code = determine_opcode(input.bits(21, 4));
     let set_flag = input.bit(20);
-    let destination_reg = Register::R0;
-    let read_reg = Register::R1;
+    let destination_reg = Register::from_bits(input, 12);
+    let read_reg = Register::from_bits(input, 16);
     let value = 10;
     let source = SourceOperand::Immediate(value);
     let kind = ArmKind::DataProcessing(DataProcessing {
@@ -26,6 +26,11 @@ pub(crate) fn parse_arm(input: Bitfield) -> ArmInstruction {
     });
     ArmInstruction { condition, kind }
 }
-fn determine_opcode(_code: u32) -> ArmOpCode {
-    ArmOpCode::Mov
+fn determine_opcode(code: u32) -> ArmOpCode {
+    match code {
+        0xD => ArmOpCode::Mov,
+        0x4 => ArmOpCode::Add,
+        #[allow(clippy::unimplemented, reason = "work in progress")]
+        _ => unimplemented!(),
+    }
 }
