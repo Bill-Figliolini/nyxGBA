@@ -1,16 +1,17 @@
-use crate::gba::cpu::Register;
+use crate::gba::{bitmanip::Bitfield, cpu::Register};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ArmInstruction {
     pub condition: ArmCondition,
     pub kind: ArmKind,
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum ArmKind {
     DataProcessing(DataProcessing),
+    Unimplemented(Bitfield),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct DataProcessing {
     pub op_code: ArmOpCode,
     pub set_flag: bool,
@@ -66,42 +67,57 @@ impl ArmCondition {
         }
     }
 }
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum ArmOpCode {
     Mov,
     Add,
+    Unimplemented(Bitfield),
 }
 
-#[derive(Debug, Clone, Copy)]
-#[cfg_attr(not(test), expect(dead_code, reason = "To be used later"))]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum SourceOperand {
     Immediate(u32),
     Register(Register),
 }
 
+impl SourceOperand {
+    pub(crate) fn from_bits(input: Bitfield) -> Self {
+        if input.bit(25) {
+            let value = input
+                .bits(0, 8)
+                .rotate_right(input.bits(8, 4).strict_mul(2));
+            SourceOperand::Immediate(value)
+        } else {
+            //TODO: Implement barrel shifting
+            let register = Register::from_bits(input, 0);
+            SourceOperand::Register(register)
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
-    const ALL: [ArmCondition; 16] = [
-        ArmCondition::Equal,
-        ArmCondition::NotEqual,
-        ArmCondition::CarrySet,
-        ArmCondition::CarryCleared,
-        ArmCondition::Minus,
-        ArmCondition::Plus,
-        ArmCondition::SignedOverflow,
-        ArmCondition::NoSignedOverflow,
-        ArmCondition::UnsignedHigher,
-        ArmCondition::UnsignedLowerOrSame,
-        ArmCondition::SignedGreaterEq,
-        ArmCondition::SignedLess,
-        ArmCondition::SignedGreater,
-        ArmCondition::SignedLessEq,
-        ArmCondition::Always,
-        ArmCondition::Never,
-    ];
     use super::*;
     mod condition {
         use super::*;
+        const ALL: [ArmCondition; 16] = [
+            ArmCondition::Equal,
+            ArmCondition::NotEqual,
+            ArmCondition::CarrySet,
+            ArmCondition::CarryCleared,
+            ArmCondition::Minus,
+            ArmCondition::Plus,
+            ArmCondition::SignedOverflow,
+            ArmCondition::NoSignedOverflow,
+            ArmCondition::UnsignedHigher,
+            ArmCondition::UnsignedLowerOrSame,
+            ArmCondition::SignedGreaterEq,
+            ArmCondition::SignedLess,
+            ArmCondition::SignedGreater,
+            ArmCondition::SignedLessEq,
+            ArmCondition::Always,
+            ArmCondition::Never,
+        ];
         #[test]
         fn accepts_values_from_0_to_f() {
             let results = ALL;
@@ -110,6 +126,28 @@ mod tests {
                 assert_eq!(ArmCondition::new(i), results_iter.next().unwrap());
             }
             assert_eq!(results_iter.next(), None);
+        }
+    }
+    mod source_operand {
+        use super::*;
+        #[test]
+        fn read_immediate_unshifted() {
+            let input = Bitfield::new(0b0000_0010_0000_0000_0000_0000_1111_1111);
+            let expected_result = SourceOperand::Immediate(0b1111_1111);
+
+            let actual_result = SourceOperand::from_bits(input);
+
+            assert_eq!(actual_result, expected_result);
+        }
+        #[test]
+        fn read_immediate_shifted() {
+            let input = Bitfield::new(0b0000_0010_0000_0000_0000_0001_1111_1111);
+            let expected_result =
+                SourceOperand::Immediate(0b1100_0000_0000_0000_0000_0000_0011_1111);
+
+            let actual_result = SourceOperand::from_bits(input);
+
+            assert_eq!(actual_result, expected_result);
         }
     }
 }

@@ -1,7 +1,10 @@
-use crate::gba::{
-    cpu::cpu_impl::Cpu,
-    instructions::{ArmKind, ArmOpCode, DataProcessing},
-    memory::Bus,
+use crate::{
+    gba::{
+        cpu::cpu_impl::Cpu,
+        instructions::{ArmKind, ArmOpCode, DataProcessing},
+        memory::Bus,
+    },
+    log_error,
 };
 
 impl Cpu {
@@ -10,12 +13,18 @@ impl Cpu {
             ArmKind::DataProcessing(data_processing) => {
                 self.run_data_processing(data_processing);
             }
+            ArmKind::Unimplemented(instr) => {
+                log_error(&format!("Unknown instruction found: {instr}"));
+            }
         }
     }
     fn run_data_processing(&mut self, instr: DataProcessing) {
         match instr.op_code {
             ArmOpCode::Mov => self.arm_mov(instr),
             ArmOpCode::Add => self.arm_add(instr),
+            ArmOpCode::Unimplemented(code) => {
+                log_error(&format!("Unknown instruction found: {code}"));
+            }
         }
     }
     fn arm_mov(&mut self, command: DataProcessing) {

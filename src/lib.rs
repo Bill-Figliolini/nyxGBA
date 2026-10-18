@@ -9,3 +9,8 @@ pub fn nyx_main() {
     gba.run();
     gba.reset();
 }
+
+#[allow(clippy::print_stderr, reason = "temporary until better logging exists")]
+pub(crate) fn log_error(string: &str) {
+    eprintln!("{string}");
+}
