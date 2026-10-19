@@ -34,9 +34,10 @@ impl Cpu {
             source,
             ..
         } = command;
-        let value = self.operand_value(source);
+        let (value, carry) = self.operand_value(source);
         if set_flag {
             self.cpsr.set_nz(value);
+            self.cpsr.set_carry(carry);
         }
         self.write(destination, value);
     }
@@ -48,7 +49,7 @@ impl Cpu {
             source,
             ..
         } = command;
-        let r_value = self.operand_value(source);
+        let (r_value, _) = self.operand_value(source);
         let l_value = self.read(read);
         let (result, carry) = l_value.overflowing_add(r_value);
         let overflow = l_value

@@ -84,7 +84,7 @@ impl SourceOperand {
     pub(crate) fn from_bits(input: Bitfield) -> Self {
         if input.bit(25) {
             let shift = input.bits(8, 4).strict_mul(2);
-            let value = input.bits(0, 8).rotate_right(shift);
+            let value = input.bits(0, 8);
             SourceOperand::Immediate { value, shift }
         } else {
             //TODO: Implement barrel shifting

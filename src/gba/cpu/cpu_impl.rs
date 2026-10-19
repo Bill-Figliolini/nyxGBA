@@ -87,13 +87,14 @@ impl Cpu {
             ArmCondition::Never => false,
         }
     }
-    pub(crate) fn operand_value(&self, operand: SourceOperand) -> u32 {
+    pub(crate) fn operand_value(&self, operand: SourceOperand) -> (u32, bool) {
         match operand {
-            SourceOperand::Immediate {
-                value: val,
-                shift: _,
-            } => val,
-            SourceOperand::Register(register) => self.read(register),
+            SourceOperand::Immediate { value, shift } => {
+                let result = value.rotate_right(shift);
+                let carry = shift != 0;
+                (result, carry)
+            }
+            SourceOperand::Register(register) => (self.read(register), false),
         }
     }
 }
