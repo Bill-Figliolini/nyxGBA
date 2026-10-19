@@ -76,17 +76,16 @@ pub(crate) enum ArmOpCode {
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum SourceOperand {
-    Immediate(u32),
+    Immediate { value: u32, shift: u32 },
     Register(Register),
 }
 
 impl SourceOperand {
     pub(crate) fn from_bits(input: Bitfield) -> Self {
         if input.bit(25) {
-            let value = input
-                .bits(0, 8)
-                .rotate_right(input.bits(8, 4).strict_mul(2));
-            SourceOperand::Immediate(value)
+            let shift = input.bits(8, 4).strict_mul(2);
+            let value = input.bits(0, 8).rotate_right(shift);
+            SourceOperand::Immediate { value, shift }
         } else {
             //TODO: Implement barrel shifting
             let register = Register::from_bits(input, 0);
@@ -133,7 +132,10 @@ mod tests {
         #[test]
         fn read_immediate_unshifted() {
             let input = Bitfield::new(0b0000_0010_0000_0000_0000_0000_1111_1111);
-            let expected_result = SourceOperand::Immediate(0b1111_1111);
+            let expected_result = SourceOperand::Immediate {
+                value: 0b1111_1111,
+                shift: 0,
+            };
 
             let actual_result = SourceOperand::from_bits(input);
 
@@ -142,8 +144,10 @@ mod tests {
         #[test]
         fn read_immediate_shifted() {
             let input = Bitfield::new(0b0000_0010_0000_0000_0000_0001_1111_1111);
-            let expected_result =
-                SourceOperand::Immediate(0b1100_0000_0000_0000_0000_0000_0011_1111);
+            let expected_result = SourceOperand::Immediate {
+                value: 0b1100_0000_0000_0000_0000_0000_0011_1111,
+                shift: 2,
+            };
 
             let actual_result = SourceOperand::from_bits(input);
 

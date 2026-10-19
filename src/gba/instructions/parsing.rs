@@ -65,7 +65,10 @@ mod tests {
             let read_reg = Register::R10;
             let destination_reg = Register::R0;
             let set_flag = true;
-            let source = SourceOperand::Immediate(20);
+            let source = SourceOperand::Immediate {
+                value: 20,
+                shift: 0,
+            };
             let expected_output = ArmKind::DataProcessing(DataProcessing {
                 op_code,
                 set_flag,

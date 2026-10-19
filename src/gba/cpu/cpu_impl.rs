@@ -89,7 +89,10 @@ impl Cpu {
     }
     pub(crate) fn operand_value(&self, operand: SourceOperand) -> u32 {
         match operand {
-            SourceOperand::Immediate(val) => val,
+            SourceOperand::Immediate {
+                value: val,
+                shift: _,
+            } => val,
             SourceOperand::Register(register) => self.read(register),
         }
     }
@@ -119,7 +122,7 @@ mod tests {
                 let register = Register::R0;
                 let read_reg = Register::R1;
                 let value = 10;
-                let operand = SourceOperand::Immediate(value);
+                let operand = SourceOperand::Immediate { value, shift: 0 };
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = ArmInstruction {
                     condition: ArmCondition::Always,

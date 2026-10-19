@@ -88,7 +88,7 @@ mod tests {
                     set_flag,
                     destination_reg: Register::R1,
                     read_reg: Register::R0,
-                    source: SourceOperand::Immediate(value),
+                    source: SourceOperand::Immediate { value, shift: 0 },
                 }),
             }
         }
@@ -147,7 +147,7 @@ mod tests {
                     set_flag: true,
                     destination_reg: dest,
                     read_reg: reg,
-                    source: SourceOperand::Immediate(1),
+                    source: SourceOperand::Immediate { value: 1, shift: 0 },
                 }),
             };
 
@@ -171,7 +171,7 @@ mod tests {
                     set_flag: true,
                     destination_reg: dest,
                     read_reg: reg,
-                    source: SourceOperand::Immediate(0),
+                    source: SourceOperand::Immediate { value: 0, shift: 0 },
                 }),
             };
 
@@ -194,7 +194,7 @@ mod tests {
                     set_flag: true,
                     destination_reg: dest,
                     read_reg: reg,
-                    source: SourceOperand::Immediate(1),
+                    source: SourceOperand::Immediate { value: 1, shift: 0 },
                 }),
             };
 
@@ -217,7 +217,10 @@ mod tests {
                     set_flag: true,
                     destination_reg: dest,
                     read_reg: reg,
-                    source: SourceOperand::Immediate(val.cast_unsigned()),
+                    source: SourceOperand::Immediate {
+                        value: val.cast_unsigned(),
+                        shift: 0,
+                    },
                 }),
             };
 
@@ -239,7 +242,10 @@ mod tests {
                     set_flag: true,
                     destination_reg: dest,
                     read_reg: reg,
-                    source: SourceOperand::Immediate(0x8000_0000),
+                    source: SourceOperand::Immediate {
+                        value: 0x8000_0000,
+                        shift: 0,
+                    },
                 }),
             };
 
