@@ -145,7 +145,7 @@ mod tests {
         fn read_immediate_shifted() {
             let input = Bitfield::new(0b0000_0010_0000_0000_0000_0001_1111_1111);
             let expected_result = SourceOperand::Immediate {
-                value: 0b1100_0000_0000_0000_0000_0000_0011_1111,
+                value: 0b0000_0000_0000_0000_0000_0000_1111_1111,
                 shift: 2,
             };
 

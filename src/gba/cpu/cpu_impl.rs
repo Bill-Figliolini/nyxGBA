@@ -87,14 +87,15 @@ impl Cpu {
             ArmCondition::Never => false,
         }
     }
-    pub(crate) fn operand_value(&self, operand: SourceOperand) -> (u32, bool) {
+    pub(crate) fn operand_value(&self, operand: SourceOperand) -> (u32, Option<bool>) {
         match operand {
-            SourceOperand::Immediate { value, shift } => {
+            SourceOperand::Immediate { value, shift } if shift != 0 => {
                 let result = value.rotate_right(shift);
-                let carry = shift != 0;
-                (result, carry)
+                let carry = (result & (1 << 31)) != 0;
+                (result, Some(carry))
             }
-            SourceOperand::Register(register) => (self.read(register), false),
+            SourceOperand::Immediate { value, shift: _ } => (value, None),
+            SourceOperand::Register(register) => (self.read(register), None),
         }
     }
 }
@@ -102,6 +103,46 @@ impl Cpu {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    mod source_operand {
+        use super::*;
+        fn immediate_test(value: u32, shift: u32) -> (u32, Option<bool>) {
+            let op = SourceOperand::Immediate { value, shift };
+            let cpu = Cpu::new();
+
+            cpu.operand_value(op)
+        }
+        #[test]
+        fn immediate_returns_none_on_no_shift() {
+            let value = 0xFF;
+            let shift = 0;
+            let expected_result = (value, None);
+
+            let actual_result = immediate_test(value, shift);
+
+            assert_eq!(actual_result, expected_result);
+        }
+        #[test]
+        fn immediate_returns_true_on_shift_with_31_set() {
+            let value: u32 = 0xFF;
+            let shift = 2;
+            let expected_result = (value.rotate_right(shift), Some(true));
+
+            let actual_result = immediate_test(value, shift);
+
+            assert_eq!(actual_result, expected_result);
+        }
+        #[test]
+        fn immediate_returns_false_on_shift_with_31_not_set() {
+            let value: u32 = 0xFF;
+            let shift = 10;
+            let expected_result = (value.rotate_right(shift), Some(false));
+
+            let actual_result = immediate_test(value, shift);
+
+            assert_eq!(actual_result, expected_result);
+        }
+    }
 
     mod general_purpose {
         use super::*;

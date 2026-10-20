@@ -37,7 +37,9 @@ impl Cpu {
         let (value, carry) = self.operand_value(source);
         if set_flag {
             self.cpsr.set_nz(value);
-            self.cpsr.set_carry(carry);
+            if let Some(carry_val) = carry {
+                self.cpsr.set_carry(carry_val);
+            }
         }
         self.write(destination, value);
     }
