@@ -135,24 +135,31 @@ mod tests {
         fn make_test_bus() -> TestBus {
             TestBus::new(vec![], vec![])
         }
-
+        fn add_instr(
+            destination_reg: Register,
+            read_reg: Register,
+            source: SourceOperand,
+        ) -> ArmInstruction {
+            ArmInstruction {
+                condition: ArmCondition::Always,
+                kind: ArmKind::DataProcessing(DataProcessing {
+                    op_code: ArmOpCode::Add,
+                    set_flag: true,
+                    destination_reg,
+                    read_reg,
+                    source,
+                }),
+            }
+        }
         #[test]
         fn carry_flag_set_on_overflow() {
             let mut cpu = Cpu::new();
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
+            let source = SourceOperand::Immediate { value: 1, shift: 0 };
             cpu.write(reg, u32::MAX);
-            let instr = ArmInstruction {
-                condition: ArmCondition::Always,
-                kind: ArmKind::DataProcessing(DataProcessing {
-                    op_code: ArmOpCode::Add,
-                    set_flag: true,
-                    destination_reg: dest,
-                    read_reg: reg,
-                    source: SourceOperand::Immediate { value: 1, shift: 0 },
-                }),
-            };
+            let instr = add_instr(dest, reg, source);
 
             cpu.arm_exec(instr, &mut bus);
 
@@ -166,18 +173,10 @@ mod tests {
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
+            let source = SourceOperand::Immediate { value: 0, shift: 0 };
             cpu.write(reg, 0);
-            let instr = ArmInstruction {
-                condition: ArmCondition::Always,
-                kind: ArmKind::DataProcessing(DataProcessing {
-                    op_code: ArmOpCode::Add,
-                    set_flag: true,
-                    destination_reg: dest,
-                    read_reg: reg,
-                    source: SourceOperand::Immediate { value: 0, shift: 0 },
-                }),
-            };
 
+            let instr = add_instr(dest, reg, source);
             cpu.arm_exec(instr, &mut bus);
 
             assert_eq!(cpu.read(dest), 0);
@@ -189,18 +188,10 @@ mod tests {
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
+            let source = SourceOperand::Immediate { value: 1, shift: 0 };
             cpu.write(reg, i32::MAX.cast_unsigned());
-            let instr = ArmInstruction {
-                condition: ArmCondition::Always,
-                kind: ArmKind::DataProcessing(DataProcessing {
-                    op_code: ArmOpCode::Add,
-                    set_flag: true,
-                    destination_reg: dest,
-                    read_reg: reg,
-                    source: SourceOperand::Immediate { value: 1, shift: 0 },
-                }),
-            };
 
+            let instr = add_instr(dest, reg, source);
             cpu.arm_exec(instr, &mut bus);
 
             assert!(cpu.cpsr.overflow());
@@ -212,21 +203,13 @@ mod tests {
             let dest = Register::R1;
             let reg = Register::R0;
             let val: i32 = -1;
-            cpu.write(reg, val.cast_unsigned());
-            let instr = ArmInstruction {
-                condition: ArmCondition::Always,
-                kind: ArmKind::DataProcessing(DataProcessing {
-                    op_code: ArmOpCode::Add,
-                    set_flag: true,
-                    destination_reg: dest,
-                    read_reg: reg,
-                    source: SourceOperand::Immediate {
-                        value: val.cast_unsigned(),
-                        shift: 0,
-                    },
-                }),
+            let source = SourceOperand::Immediate {
+                value: val.cast_unsigned(),
+                shift: 0,
             };
+            cpu.write(reg, val.cast_unsigned());
 
+            let instr = add_instr(dest, reg, source);
             cpu.arm_exec(instr, &mut bus);
 
             assert!(!cpu.cpsr.overflow());
@@ -237,21 +220,13 @@ mod tests {
             let mut bus = make_test_bus();
             let dest = Register::R1;
             let reg = Register::R0;
-            cpu.write(reg, 0x8000_0000);
-            let instr = ArmInstruction {
-                condition: ArmCondition::Always,
-                kind: ArmKind::DataProcessing(DataProcessing {
-                    op_code: ArmOpCode::Add,
-                    set_flag: true,
-                    destination_reg: dest,
-                    read_reg: reg,
-                    source: SourceOperand::Immediate {
-                        value: 0x8000_0000,
-                        shift: 0,
-                    },
-                }),
+            let source = SourceOperand::Immediate {
+                value: 0x8000_0000,
+                shift: 0,
             };
+            cpu.write(reg, 0x8000_0000);
 
+            let instr = add_instr(dest, reg, source);
             cpu.arm_exec(instr, &mut bus);
 
             assert!(cpu.cpsr.overflow());
