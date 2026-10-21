@@ -12,9 +12,7 @@ const GAMEPAK_SIZE: usize = 0x0A00_0000 - 0x0800_0000;
 
 impl Rom {
     pub(crate) fn new() -> Self {
-        Self {
-            memory: Vec::with_capacity(GAMEPAK_SIZE),
-        }
+        Self { memory: Vec::new() }
     }
 
     #[cfg_attr(not(test), expect(dead_code, reason = "Testing purposes"))]
@@ -37,6 +35,7 @@ impl Rom {
         if file_size > GAMEPAK_SIZE {
             return Err(anyhow!("File too large to be a GBA ROM"));
         }
+        self.memory.reserve_exact(file_size);
 
         self.memory.clear();
         #[allow(
