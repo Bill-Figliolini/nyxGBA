@@ -1,7 +1,10 @@
 use crate::gba::{
     bitmanip::Bitfield,
     clock::Time,
-    cpu::{Register, flags::CurrentProgramStatusRegister, registers::Registers},
+    cpu::{
+        Register, arm_exec::compute_arm_actions, flags::CurrentProgramStatusRegister,
+        registers::Registers,
+    },
     instructions::{ArmCondition, ArmInstruction, SourceOperand, parse_arm},
     memory::{Address, Bus, BusWidth},
 };
@@ -10,6 +13,27 @@ use crate::gba::{
 pub(crate) struct Cpu {
     registers: Registers,
     pub(super) cpsr: CurrentProgramStatusRegister,
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+#[expect(dead_code, reason = "Work in Progress")]
+pub(crate) enum Primitive {
+    Reg(Register, u32),
+    Cpsr(CurrentProgramStatusRegister),
+    Read {
+        address: Address,
+        width: BusWidth,
+    },
+    Write {
+        address: Address,
+        width: BusWidth,
+        value: u32,
+    },
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub(crate) enum Action {
+    Primitive(Primitive),
 }
 
 impl Cpu {
@@ -37,11 +61,27 @@ impl Cpu {
 
     pub(super) fn arm_exec(&mut self, instruction: ArmInstruction, bus: &mut impl Bus) -> Time {
         if self.check(instruction.condition) {
-            self.run_arm(instruction.kind, bus);
+            let actions = compute_arm_actions(self, instruction.kind);
+            for action in actions {
+                self.apply(action, bus);
+            }
         }
         Time(0)
     }
-
+    fn apply(&mut self, action: Action, bus: &mut impl Bus) {
+        match action {
+            Action::Primitive(primitive) => match primitive {
+                Primitive::Reg(register, value) => self.write(register, value),
+                Primitive::Cpsr(cpsr) => self.cpsr = cpsr,
+                Primitive::Read { address, width } => _ = bus.read(address, width),
+                Primitive::Write {
+                    address,
+                    width,
+                    value,
+                } => bus.write(address, width, Bitfield::new(value)),
+            },
+        }
+    }
     pub(super) fn read(&self, reg: Register) -> u32 {
         if let Register::R15 = reg {
             self.registers[reg].wrapping_add(self.instruction_width())

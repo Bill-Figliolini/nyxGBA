@@ -1,6 +1,6 @@
 use crate::gba::bitmanip::Bitfield;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(in crate::gba::cpu) struct CurrentProgramStatusRegister(Bitfield);
 
 impl CurrentProgramStatusRegister {
