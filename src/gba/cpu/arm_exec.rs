@@ -1,32 +1,32 @@
 use crate::{
     gba::{
-        cpu::cpu_impl::{Action, Cpu, Primitive},
+        cpu::cpu_impl::{Action, Actions, Cpu, MAX_ACTIONS, Primitive},
         instructions::{ArmKind, ArmOpCode, DataProcessing},
     },
     log_error,
 };
 
-pub(super) fn compute_arm_actions(cpu: &Cpu, arm: ArmKind) -> Vec<Action> {
+pub(super) fn compute_arm_actions(cpu: &Cpu, arm: ArmKind) -> Actions {
     match arm {
         ArmKind::DataProcessing(data_processing) => compute_data_processing(cpu, data_processing),
         ArmKind::Unimplemented(instr) => {
             log_error(&format!("Unknown instruction found: {instr}"));
-            vec![]
+            [None; MAX_ACTIONS]
         }
     }
 }
-fn compute_data_processing(cpu: &Cpu, instr: DataProcessing) -> Vec<Action> {
+fn compute_data_processing(cpu: &Cpu, instr: DataProcessing) -> Actions {
     match instr.op_code {
         ArmOpCode::Mov => arm_mov(cpu, instr),
         ArmOpCode::Add => arm_add(cpu, instr),
         ArmOpCode::Unimplemented(code) => {
             log_error(&format!("Unknown instruction found: {code}"));
-            vec![]
+            [None; MAX_ACTIONS]
         }
     }
 }
-fn arm_mov(cpu: &Cpu, command: DataProcessing) -> Vec<Action> {
-    let mut actions = Vec::with_capacity(2);
+fn arm_mov(cpu: &Cpu, command: DataProcessing) -> Actions {
+    let mut actions = [None; MAX_ACTIONS];
 
     let DataProcessing {
         set_flag,
@@ -35,7 +35,7 @@ fn arm_mov(cpu: &Cpu, command: DataProcessing) -> Vec<Action> {
         ..
     } = command;
     let (value, carry) = cpu.operand_value(source);
-    actions.push(Action::Primitive(Primitive::Reg(destination, value)));
+    actions[0] = Some(Action::Primitive(Primitive::Reg(destination, value)));
     if set_flag {
         //TODO: distinguish from Arithmetic CPSR manipulation
         let mut cpsr = cpu.cpsr;
@@ -43,12 +43,13 @@ fn arm_mov(cpu: &Cpu, command: DataProcessing) -> Vec<Action> {
         if let Some(carry_val) = carry {
             cpsr.set_carry(carry_val);
         }
-        actions.push(Action::Primitive(Primitive::Cpsr(cpsr)));
+        actions[1] = Some(Action::Primitive(Primitive::Cpsr(cpsr)));
     }
     actions
 }
-fn arm_add(cpu: &Cpu, command: DataProcessing) -> Vec<Action> {
-    let mut actions = Vec::with_capacity(2);
+fn arm_add(cpu: &Cpu, command: DataProcessing) -> Actions {
+    let mut actions = [None; MAX_ACTIONS];
+
     let DataProcessing {
         set_flag,
         destination_reg: destination,
@@ -63,13 +64,13 @@ fn arm_add(cpu: &Cpu, command: DataProcessing) -> Vec<Action> {
         .cast_signed()
         .overflowing_add(r_value.cast_signed())
         .1;
-    actions.push(Action::Primitive(Primitive::Reg(destination, result)));
+    actions[0] = Some(Action::Primitive(Primitive::Reg(destination, result)));
     if set_flag {
         let mut cpsr = cpu.cpsr;
         cpsr.set_nz(result);
         cpsr.set_carry(carry);
         cpsr.set_overflow(overflow);
-        actions.push(Action::Primitive(Primitive::Cpsr(cpsr)));
+        actions[1] = Some(Action::Primitive(Primitive::Cpsr(cpsr)));
     }
 
     actions
@@ -99,21 +100,17 @@ mod tests {
             let destination = Register::R0;
             let instr = mov_instr(true, value, destination);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [register, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let register = iter.next().unwrap();
             assert_eq!(
                 register,
-                Action::Primitive(Primitive::Reg(destination, value))
+                Some(Action::Primitive(Primitive::Reg(destination, value)))
             );
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(!cpsr.negative());
-                assert!(cpsr.zero());
-            } else {
-                panic!()
-            }
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(!cpsr.negative());
+            assert!(cpsr.zero());
         }
         #[test]
         fn set_negative_flag_on_high_bit() {
@@ -122,21 +119,17 @@ mod tests {
             let destination = Register::R0;
             let instr = mov_instr(true, value, destination);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [register, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let register = iter.next().unwrap();
             assert_eq!(
                 register,
-                Action::Primitive(Primitive::Reg(destination, value))
+                Some(Action::Primitive(Primitive::Reg(destination, value)))
             );
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(cpsr.negative());
-                assert!(!cpsr.zero());
-            } else {
-                panic!()
-            }
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(cpsr.negative());
+            assert!(!cpsr.zero());
         }
         #[test]
         fn do_not_set_flags_without_set_flag() {
@@ -145,15 +138,12 @@ mod tests {
             let destination = Register::R0;
             let instr = mov_instr(false, value, destination);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [register, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let register = iter.next().unwrap();
             assert_eq!(
                 register,
-                Action::Primitive(Primitive::Reg(destination, value))
+                Some(Action::Primitive(Primitive::Reg(destination, value)))
             );
-            let cpsr = iter.next();
             assert!(cpsr.is_none());
         }
     }
@@ -182,17 +172,13 @@ mod tests {
             cpu.write(reg, u32::MAX);
             let instr = add_instr(dest, reg, source);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [register, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let register = iter.next().unwrap();
-            assert_eq!(register, Action::Primitive(Primitive::Reg(dest, 0)));
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(cpsr.carry());
-            } else {
-                panic!()
-            }
+            assert_eq!(register, Some(Action::Primitive(Primitive::Reg(dest, 0))));
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(cpsr.carry());
         }
 
         #[test]
@@ -204,17 +190,13 @@ mod tests {
             cpu.write(reg, 0);
             let instr = add_instr(dest, reg, source);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [register, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let register = iter.next().unwrap();
-            assert_eq!(register, Action::Primitive(Primitive::Reg(dest, 0)));
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(cpsr.zero());
-            } else {
-                panic!()
-            }
+            assert_eq!(register, Some(Action::Primitive(Primitive::Reg(dest, 0))));
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(cpsr.zero());
         }
         #[test]
         fn set_overflow_flag_on_signed_overflow() {
@@ -225,16 +207,12 @@ mod tests {
             cpu.write(reg, i32::MAX.cast_unsigned());
 
             let instr = add_instr(dest, reg, source);
-            let effects = compute_arm_actions(&cpu, instr);
+            let [_, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let _register = iter.next().unwrap();
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(cpsr.overflow());
-            } else {
-                panic!()
-            }
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(cpsr.overflow());
         }
         #[test]
         fn do_not_set_overflow_flag_on_negative_addition() {
@@ -249,16 +227,12 @@ mod tests {
             let instr = add_instr(dest, reg, source);
             cpu.write(reg, val.cast_unsigned());
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [_, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let _register = iter.next().unwrap();
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(!cpsr.overflow());
-            } else {
-                panic!()
-            }
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(!cpsr.overflow());
         }
         #[test]
         fn set_overflow_flag_on_overflow() {
@@ -272,16 +246,12 @@ mod tests {
             cpu.write(reg, 0x8000_0000);
             let instr = add_instr(dest, reg, source);
 
-            let effects = compute_arm_actions(&cpu, instr);
+            let [_, cpsr, ..] = compute_arm_actions(&cpu, instr);
 
-            let mut iter = effects.into_iter();
-            let _register = iter.next().unwrap();
-            let cpsr = iter.next().unwrap();
-            if let Action::Primitive(Primitive::Cpsr(cpsr)) = cpsr {
-                assert!(cpsr.overflow());
-            } else {
-                panic!()
-            }
+            let Some(Action::Primitive(Primitive::Cpsr(cpsr))) = cpsr else {
+                panic!("Expected CPSR")
+            };
+            assert!(cpsr.overflow());
         }
     }
 }

@@ -34,7 +34,13 @@ pub(crate) enum Primitive {
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum Action {
     Primitive(Primitive),
+    //TODO: Model block transfers as a single Action
 }
+///SWI requires 4 instructions, under current model.
+/// May need to be increased, depending on timing model.
+pub(crate) const MAX_ACTIONS: usize = 4;
+
+pub(crate) type Actions = [Option<Action>; MAX_ACTIONS];
 
 impl Cpu {
     pub(crate) fn new() -> Self {
@@ -62,7 +68,7 @@ impl Cpu {
     pub(super) fn arm_exec(&mut self, instruction: ArmInstruction, bus: &mut impl Bus) -> Time {
         if self.check(instruction.condition) {
             let actions = compute_arm_actions(self, instruction.kind);
-            for action in actions {
+            for action in actions.into_iter().flatten() {
                 self.apply(action, bus);
             }
         }
