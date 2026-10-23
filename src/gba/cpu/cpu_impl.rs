@@ -2,7 +2,9 @@ use crate::gba::{
     bitmanip::Bitfield,
     clock::Time,
     cpu::{
-        Register, arm_exec::compute_arm_actions, flags::CurrentProgramStatusRegister,
+        Register,
+        arm_exec::compute_arm_actions,
+        flags::{CurrentProgramStatusRegister, FlagApplication},
         registers::Registers,
     },
     instructions::{ArmCondition, ArmInstruction, SourceOperand, parse_arm},
@@ -19,7 +21,7 @@ pub(crate) struct Cpu {
 #[expect(dead_code, reason = "Work in Progress")]
 pub(crate) enum Primitive {
     Reg(Register, u32),
-    Cpsr(CurrentProgramStatusRegister),
+    Flags(FlagApplication),
     Read {
         address: Address,
         width: BusWidth,
@@ -78,7 +80,7 @@ impl Cpu {
         match action {
             Action::Primitive(primitive) => match primitive {
                 Primitive::Reg(register, value) => self.write(register, value),
-                Primitive::Cpsr(cpsr) => self.cpsr = cpsr,
+                Primitive::Flags(flags) => self.cpsr.apply(flags),
                 Primitive::Read { address, width } => _ = bus.read(address, width),
                 Primitive::Write {
                     address,
@@ -253,6 +255,62 @@ mod tests {
 
                 assert_eq!(cpu.read(register), value);
                 assert_eq!(cpu.read(read_reg), original_read_reg_val);
+            }
+            #[test]
+            fn movs_updates_nz_and_preserves_cv() {
+                let mut cpu = Cpu::new();
+                let mut bus = make_test_bus();
+                cpu.cpsr = CurrentProgramStatusRegister::builder()
+                    .zero()
+                    .negative()
+                    .carry()
+                    .overflow()
+                    .build();
+                let instruction = ArmInstruction {
+                    condition: ArmCondition::Always,
+                    kind: ArmKind::DataProcessing(DataProcessing {
+                        op_code: ArmOpCode::Mov,
+                        set_flag: true,
+                        destination_reg: Register::R0,
+                        read_reg: Register::R1,
+                        source: SourceOperand::Immediate { value: 1, shift: 0 },
+                    }),
+                };
+
+                cpu.arm_exec(instruction, &mut bus);
+
+                assert!(!cpu.cpsr.zero());
+                assert!(!cpu.cpsr.negative());
+                assert!(cpu.cpsr.carry());
+                assert!(cpu.cpsr.overflow());
+            }
+            #[test]
+            fn adds_overwrites_all_flags() {
+                let mut cpu = Cpu::new();
+                let mut bus = make_test_bus();
+                cpu.cpsr = CurrentProgramStatusRegister::builder()
+                    .negative()
+                    .overflow()
+                    .build();
+                let read_reg = Register::R1;
+                cpu.write(read_reg, u32::MAX);
+                let instruction = ArmInstruction {
+                    condition: ArmCondition::Always,
+                    kind: ArmKind::DataProcessing(DataProcessing {
+                        op_code: ArmOpCode::Add,
+                        set_flag: true,
+                        destination_reg: Register::R0,
+                        read_reg,
+                        source: SourceOperand::Immediate { value: 1, shift: 0 },
+                    }),
+                };
+
+                cpu.arm_exec(instruction, &mut bus);
+
+                assert!(cpu.cpsr.zero());
+                assert!(!cpu.cpsr.negative());
+                assert!(cpu.cpsr.carry());
+                assert!(!cpu.cpsr.overflow());
             }
 
             mod check_conditions {
