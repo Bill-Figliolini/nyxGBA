@@ -82,18 +82,54 @@ pub(crate) enum SourceOperand {
     },
     Register {
         register: Register,
-        shift_type: ShiftType,
+        shift: Option<Shift>,
     },
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub(crate) enum ShiftType {
-    None,
+pub(crate) struct Shift {
+    pub kind: ShiftKind,
+    pub amount: ShiftAmount,
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum ShiftKind {
+    LogicalShiftLeft,
+    LogicalShiftRight,
+    ArithmeticShiftRight,
+    RotateRight,
+    RotateRightExtend,
+}
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum ShiftAmount {
+    //Shift Immediates must be constrained to 32 max
+    Immediate(u32),
+    Register(Register),
 }
 
-impl ShiftType {
-    pub(crate) fn shift(self, input: u32) -> (u32, bool) {
-        match self {
-            ShiftType::None => (input, false),
+impl ShiftKind {
+    fn from_bits(input: u32) -> Self {
+        match input {
+            0 => Self::LogicalShiftLeft,
+            1 => Self::LogicalShiftRight,
+            2 => Self::ArithmeticShiftRight,
+            3 => Self::RotateRight,
+            _ => unreachable!(),
+        }
+    }
+}
+
+impl Shift {
+    #[expect(clippy::todo, reason = "Will be finished next commit")]
+    pub(crate) fn shift(self, input: u32, value: u32, _carry: bool) -> (u32, bool) {
+        match self.kind {
+            ShiftKind::LogicalShiftLeft => todo!(),
+            ShiftKind::LogicalShiftRight => todo!(),
+            ShiftKind::ArithmeticShiftRight => todo!(),
+            ShiftKind::RotateRight => {
+                let result = input.rotate_right(value);
+                let carry = result >> 31 == 1;
+                (result, carry)
+            }
+            ShiftKind::RotateRightExtend => todo!(),
         }
     }
 }
@@ -103,14 +139,41 @@ impl SourceOperand {
         if input.bit(25) {
             let shift = input.bits(8, 4).strict_mul(2);
             let value = input.bits(0, 8);
-            SourceOperand::Immediate { value, shift }
+            Self::Immediate { value, shift }
         } else {
-            //TODO: Implement barrel shifting
             let register = Register::from_bits(input, 0);
-            SourceOperand::Register {
-                register,
-                shift_type: ShiftType::None,
-            }
+            let kind = ShiftKind::from_bits(input.bits(5, 2));
+            let shift = if input.bit(4) {
+                Some(Shift {
+                    kind,
+                    amount: ShiftAmount::Register(Register::from_bits(input, 8)),
+                })
+            } else {
+                match (kind, input.bits(7, 5)) {
+                    (ShiftKind::LogicalShiftLeft, 0) => None,
+                    (ShiftKind::LogicalShiftRight | ShiftKind::ArithmeticShiftRight, 0) => {
+                        Some(Shift {
+                            kind,
+                            amount: ShiftAmount::Immediate(32),
+                        })
+                    }
+                    (ShiftKind::RotateRight, 0) => Some(Shift {
+                        kind: ShiftKind::RotateRightExtend,
+                        amount: ShiftAmount::Immediate(1),
+                    }),
+                    (kind, amount) => {
+                        debug_assert!(
+                            0 < amount,
+                            "ShiftAmount::Immediate must be above 0. Only violable if ShiftKind::from_bits starts producing RotateRightExtend"
+                        );
+                        Some(Shift {
+                            kind,
+                            amount: ShiftAmount::Immediate(amount),
+                        })
+                    }
+                }
+            };
+            Self::Register { register, shift }
         }
     }
 }
@@ -178,7 +241,6 @@ mod tests {
             }
         }
         mod register {
-
             use super::*;
             #[test]
             fn produces_all_registers() {
@@ -192,11 +254,17 @@ mod tests {
                         actual_reg,
                         SourceOperand::Register {
                             register: expected_reg,
-                            shift_type: ShiftType::None
+                            shift: None
                         }
                     );
                 }
                 assert!(results.next().is_none());
+            }
+            mod barrel_shifter {
+                #[allow(unused_imports, reason = "Will be implemented next commit")]
+                use super::*;
+                //TODO: Implement tests for Barrel shifter, Covering parsing and
+                // behavior
             }
         }
     }

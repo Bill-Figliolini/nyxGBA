@@ -7,7 +7,7 @@ use crate::gba::{
         flags::{CurrentProgramStatusRegister, FlagApplication},
         registers::Registers,
     },
-    instructions::{ArmCondition, ArmInstruction, SourceOperand, parse_arm},
+    instructions::{ArmCondition, ArmInstruction, ShiftAmount, SourceOperand, parse_arm},
     memory::{Address, Bus, BusWidth},
 };
 
@@ -137,18 +137,29 @@ impl Cpu {
     }
     pub(crate) fn operand_value(&self, operand: SourceOperand) -> (u32, Option<bool>) {
         match operand {
-            SourceOperand::Immediate { value, shift } if shift != 0 => {
+            SourceOperand::Immediate { value, shift: 0 } => (value, None),
+            SourceOperand::Immediate { value, shift } => {
                 let result = value.rotate_right(shift);
                 let carry = (result & (1 << 31)) != 0;
                 (result, Some(carry))
             }
-            SourceOperand::Immediate { value, shift: _ } => (value, None),
             SourceOperand::Register {
                 register,
-                shift_type,
+                shift: None,
+            } => (self.read(register), None),
+            SourceOperand::Register {
+                register,
+                shift: Some(shift),
             } => {
-                let (result, c_flag) = shift_type.shift(self.read(register));
-                (result, Some(c_flag))
+                let input = self.read(register);
+                let value = match shift.amount {
+                    ShiftAmount::Immediate(value) => value,
+                    //Barrel Shifter only used the bottom 8 bits
+                    ShiftAmount::Register(value_register) => self.read(value_register) & 0xFF,
+                };
+                let carry = self.cpsr.carry();
+                let (result, new_carry) = shift.shift(input, value, carry);
+                (result, Some(new_carry))
             }
         }
     }
@@ -204,8 +215,7 @@ mod tests {
             use super::*;
             use crate::gba::{
                 instructions::{
-                    ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, ShiftType,
-                    SourceOperand,
+                    ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand,
                 },
                 memory::TestBus,
             };
@@ -247,7 +257,7 @@ mod tests {
                 let value = 10;
                 let operand = SourceOperand::Register {
                     register: write_reg,
-                    shift_type: ShiftType::None,
+                    shift: None,
                 };
                 cpu.write(write_reg, value);
                 let original_read_reg_val = cpu.read(read_reg);

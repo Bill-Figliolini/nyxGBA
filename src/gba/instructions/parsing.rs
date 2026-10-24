@@ -56,7 +56,6 @@ mod tests {
     use super::*;
 
     mod data_processing {
-        use crate::gba::instructions::arm::ShiftType;
 
         use super::*;
         #[test]
@@ -93,7 +92,7 @@ mod tests {
             let set_flag = true;
             let source = SourceOperand::Register {
                 register: Register::R6,
-                shift_type: ShiftType::None,
+                shift: None,
             };
             let expected_output = ArmKind::DataProcessing(DataProcessing {
                 op_code,
