@@ -47,7 +47,27 @@ impl Register {
         }
     }
 }
-
+#[cfg(test)]
+impl Register {
+    pub(crate) const ALL: [Register; 16] = [
+        Register::R0,
+        Register::R1,
+        Register::R2,
+        Register::R3,
+        Register::R4,
+        Register::R5,
+        Register::R6,
+        Register::R7,
+        Register::R8,
+        Register::R9,
+        Register::R10,
+        Register::R11,
+        Register::R12,
+        Register::R13,
+        Register::R14,
+        Register::R15,
+    ];
+}
 #[derive(Debug)]
 pub(super) struct Registers {
     general_purpose: [u32; 16],
@@ -92,29 +112,11 @@ impl IndexMut<Register> for Registers {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const ALL: [Register; 16] = [
-        Register::R0,
-        Register::R1,
-        Register::R2,
-        Register::R3,
-        Register::R4,
-        Register::R5,
-        Register::R6,
-        Register::R7,
-        Register::R8,
-        Register::R9,
-        Register::R10,
-        Register::R11,
-        Register::R12,
-        Register::R13,
-        Register::R14,
-        Register::R15,
-    ];
     mod register {
         use super::*;
         #[test]
         fn all_values_produced() {
-            let registers = ALL.to_vec();
+            let registers = Register::ALL.to_vec();
 
             for (i, register) in registers.into_iter().enumerate() {
                 let i: u32 = i.try_into().unwrap();

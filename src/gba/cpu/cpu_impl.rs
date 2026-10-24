@@ -143,7 +143,13 @@ impl Cpu {
                 (result, Some(carry))
             }
             SourceOperand::Immediate { value, shift: _ } => (value, None),
-            SourceOperand::Register(register) => (self.read(register), None),
+            SourceOperand::Register {
+                register,
+                shift_type,
+            } => {
+                let (result, c_flag) = shift_type.shift(self.read(register));
+                (result, Some(c_flag))
+            }
         }
     }
 }
@@ -198,7 +204,8 @@ mod tests {
             use super::*;
             use crate::gba::{
                 instructions::{
-                    ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, SourceOperand,
+                    ArmCondition, ArmInstruction, ArmKind, ArmOpCode, DataProcessing, ShiftType,
+                    SourceOperand,
                 },
                 memory::TestBus,
             };
@@ -238,7 +245,10 @@ mod tests {
                 let read_reg = Register::R3;
                 let write_reg = Register::R2;
                 let value = 10;
-                let operand = SourceOperand::Register(write_reg);
+                let operand = SourceOperand::Register {
+                    register: write_reg,
+                    shift_type: ShiftType::None,
+                };
                 cpu.write(write_reg, value);
                 let original_read_reg_val = cpu.read(read_reg);
                 let instruction = ArmInstruction {
