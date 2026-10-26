@@ -1,4 +1,7 @@
-use crate::gba::{bitmanip::Bitfield, cpu::Register};
+use crate::gba::{
+    bitmanip::{Bitfield, bit},
+    cpu::Register,
+};
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct ArmInstruction {
@@ -100,7 +103,7 @@ pub(crate) enum ShiftKind {
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) enum ShiftAmount {
-    //Shift Immediates must be constrained to 32 max
+    //Shift Immediates are restricted to 5 bits, and can not exceed 32
     Immediate(u32),
     Register(Register),
 }
@@ -118,18 +121,35 @@ impl ShiftKind {
 }
 
 impl Shift {
-    #[expect(clippy::todo, reason = "Will be finished next commit")]
-    pub(crate) fn shift(self, input: u32, value: u32, _carry: bool) -> (u32, bool) {
+    pub(crate) fn shift(self, input: u32, amount: u32, carry: bool) -> (u32, bool) {
+        if amount == 0 {
+            return (input, carry);
+        }
         match self.kind {
-            ShiftKind::LogicalShiftLeft => todo!(),
-            ShiftKind::LogicalShiftRight => todo!(),
-            ShiftKind::ArithmeticShiftRight => todo!(),
+            ShiftKind::LogicalShiftLeft => match input.checked_shl(amount) {
+                // Strict sub here can not panic, shl will return none if 32 or greater
+                Some(result) => (result, bit(input, 32u32.strict_sub(amount))),
+                None if amount == 32 => (0, bit(input, 0)),
+                None => (0, false),
+            },
+            ShiftKind::LogicalShiftRight => match input.checked_shr(amount) {
+                // amount is guaranteed to be 1 or greater, so no panic can occur
+                Some(result) => (result, bit(input, amount.strict_sub(1))),
+                None if amount == 32 => (0, bit(input, 31)),
+                None => (0, false),
+            },
+            ShiftKind::ArithmeticShiftRight => match input.cast_signed().checked_shr(amount) {
+                // amount is guaranteed to be 1 or greater, so no panic can occur
+                Some(result) => (result.cast_unsigned(), bit(input, amount.strict_sub(1))),
+                None => (if bit(input, 31) { u32::MAX } else { 0 }, bit(input, 31)),
+            },
             ShiftKind::RotateRight => {
-                let result = input.rotate_right(value);
-                let carry = result >> 31 == 1;
-                (result, carry)
+                let result = input.rotate_right(amount);
+                (result, bit(result, 31))
             }
-            ShiftKind::RotateRightExtend => todo!(),
+            ShiftKind::RotateRightExtend => {
+                ((u32::from(carry) << 31) | (input >> 1), bit(input, 0))
+            }
         }
     }
 }
@@ -260,12 +280,73 @@ mod tests {
                 }
                 assert!(results.next().is_none());
             }
-            mod barrel_shifter {
-                #[allow(unused_imports, reason = "Will be implemented next commit")]
-                use super::*;
-                //TODO: Implement tests for Barrel shifter, Covering parsing and
-                // behavior
-            }
+        }
+    }
+    #[expect(unused_imports, reason = "Work in Progress")]
+    mod barrel_shifter {
+        use super::*;
+        mod logical_shift_left {
+            use super::*;
+            #[test]
+            #[ignore = "not yet written"]
+            fn zero_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn minimum_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_32() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_greater_than_32() {}
+        }
+        mod logical_shift_right {
+            use super::*;
+            #[test]
+            #[ignore = "not yet written"]
+            fn zero_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn minimum_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_32() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_greater_than_32() {}
+        }
+        mod arithmetic_shift_right {
+            use super::*;
+            #[test]
+            #[ignore = "not yet written"]
+            fn zero_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn minimum_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_32() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_greater_than_32() {}
+        }
+        mod rotate_right {
+            use super::*;
+            #[test]
+            #[ignore = "not yet written"]
+            fn zero_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn minimum_shift() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_32() {}
+            #[test]
+            #[ignore = "not yet written"]
+            fn shift_greater_than_32() {}
+        }
+        mod rotate_right_extend {
+            use super::*;
         }
     }
 }

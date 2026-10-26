@@ -3,6 +3,10 @@ use std::fmt::Display;
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) struct Bitfield(u32);
 
+pub(crate) fn bit(value: u32, bit: u32) -> bool {
+    (value >> bit) & 1 == 1
+}
+
 impl Bitfield {
     pub(crate) fn new(input: u32) -> Self {
         Self(input)
