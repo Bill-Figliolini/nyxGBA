@@ -109,8 +109,9 @@ pub(crate) enum ShiftAmount {
 }
 
 impl ShiftKind {
-    fn from_bits(input: u32) -> Self {
-        match input {
+    fn from_bits(input: Bitfield, start: u32) -> Self {
+        let bits = input.bits(start, 2);
+        match bits {
             0 => Self::LogicalShiftLeft,
             1 => Self::LogicalShiftRight,
             2 => Self::ArithmeticShiftRight,
@@ -162,7 +163,7 @@ impl SourceOperand {
             Self::Immediate { value, shift }
         } else {
             let register = Register::from_bits(input, 0);
-            let kind = ShiftKind::from_bits(input.bits(5, 2));
+            let kind = ShiftKind::from_bits(input, 5);
             let shift = if input.bit(4) {
                 Some(Shift {
                     kind,
@@ -282,71 +283,264 @@ mod tests {
             }
         }
     }
-    #[expect(unused_imports, reason = "Work in Progress")]
     mod barrel_shifter {
         use super::*;
+
+        fn operand(register: Register, shift: Option<Shift>) -> SourceOperand {
+            SourceOperand::Register { register, shift }
+        }
         mod logical_shift_left {
             use super::*;
+            const KIND: ShiftKind = ShiftKind::LogicalShiftLeft;
+
+            fn shifted_operand(register: Register, amount: ShiftAmount) -> SourceOperand {
+                SourceOperand::Register {
+                    register,
+                    shift: Some(Shift { kind: KIND, amount }),
+                }
+            }
+
             #[test]
-            #[ignore = "not yet written"]
-            fn zero_shift() {}
+            fn zero_shift_produces_none() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0000_0000);
+                let expected_shift = None;
+                let expected_register = Register::R0;
+                let expected_result = operand(expected_register, expected_shift);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_1111_1000_0000);
+                let expected_amount = ShiftAmount::Immediate(0b11111);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_register() {
+                let mut input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0001_0000);
+                for (value, register) in (0u32..).zip(Register::ALL) {
+                    input.set_bits(8, 4, value);
+                    let expected_amount = ShiftAmount::Register(register);
+                    let expected_register = Register::R0;
+                    let expected_result = shifted_operand(expected_register, expected_amount);
+
+                    let actual_result = SourceOperand::from_bits(input);
+
+                    assert_eq!(actual_result, expected_result);
+                }
+            }
+
             #[test]
             #[ignore = "not yet written"]
             fn minimum_shift() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_32() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_greater_than_32() {}
         }
         mod logical_shift_right {
             use super::*;
+            const KIND: ShiftKind = ShiftKind::LogicalShiftRight;
+
+            fn shifted_operand(register: Register, amount: ShiftAmount) -> SourceOperand {
+                SourceOperand::Register {
+                    register,
+                    shift: Some(Shift { kind: KIND, amount }),
+                }
+            }
+
             #[test]
-            #[ignore = "not yet written"]
-            fn zero_shift() {}
+            fn zero_shift_produces_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0010_0000);
+                let expected_amount = ShiftAmount::Immediate(32);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_1111_1010_0000);
+                let expected_amount = ShiftAmount::Immediate(0b11111);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_register() {
+                let mut input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0011_0000);
+                for (value, register) in (0u32..).zip(Register::ALL) {
+                    input.set_bits(8, 4, value);
+                    let expected_amount = ShiftAmount::Register(register);
+                    let expected_register = Register::R0;
+                    let expected_result = shifted_operand(expected_register, expected_amount);
+
+                    let actual_result = SourceOperand::from_bits(input);
+
+                    assert_eq!(actual_result, expected_result);
+                }
+            }
             #[test]
             #[ignore = "not yet written"]
             fn minimum_shift() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_32() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_greater_than_32() {}
         }
         mod arithmetic_shift_right {
             use super::*;
+            const KIND: ShiftKind = ShiftKind::ArithmeticShiftRight;
+
+            fn shifted_operand(register: Register, amount: ShiftAmount) -> SourceOperand {
+                SourceOperand::Register {
+                    register,
+                    shift: Some(Shift { kind: KIND, amount }),
+                }
+            }
+
             #[test]
-            #[ignore = "not yet written"]
-            fn zero_shift() {}
+            fn zero_shift_produces_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0100_0000);
+                let expected_amount = ShiftAmount::Immediate(32);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_1111_1100_0000);
+                let expected_amount = ShiftAmount::Immediate(0b11111);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_register() {
+                let mut input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0101_0000);
+                for (value, register) in (0u32..).zip(Register::ALL) {
+                    input.set_bits(8, 4, value);
+                    let expected_amount = ShiftAmount::Register(register);
+                    let expected_register = Register::R0;
+                    let expected_result = shifted_operand(expected_register, expected_amount);
+
+                    let actual_result = SourceOperand::from_bits(input);
+
+                    assert_eq!(actual_result, expected_result);
+                }
+            }
+
             #[test]
             #[ignore = "not yet written"]
             fn minimum_shift() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_32() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_greater_than_32() {}
         }
         mod rotate_right {
             use super::*;
+            const KIND: ShiftKind = ShiftKind::RotateRight;
+
+            fn shifted_operand(register: Register, amount: ShiftAmount) -> SourceOperand {
+                SourceOperand::Register {
+                    register,
+                    shift: Some(Shift { kind: KIND, amount }),
+                }
+            }
+
             #[test]
-            #[ignore = "not yet written"]
-            fn zero_shift() {}
+            fn zero_shift_produces_extend() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0110_0000);
+                let expected_shift = Some(Shift {
+                    kind: ShiftKind::RotateRightExtend,
+                    amount: ShiftAmount::Immediate(1),
+                });
+                let expected_register = Register::R0;
+                let expected_result = operand(expected_register, expected_shift);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_immediate() {
+                let input = Bitfield::new(0b0000_0000_0000_0000_0000_1111_1110_0000);
+                let expected_amount = ShiftAmount::Immediate(0b11111);
+                let expected_register = Register::R0;
+                let expected_result = shifted_operand(expected_register, expected_amount);
+
+                let actual_result = SourceOperand::from_bits(input);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_parse_register() {
+                let mut input = Bitfield::new(0b0000_0000_0000_0000_0000_0000_0111_0000);
+                for (value, register) in (0u32..).zip(Register::ALL) {
+                    input.set_bits(8, 4, value);
+                    let expected_amount = ShiftAmount::Register(register);
+                    let expected_register = Register::R0;
+                    let expected_result = shifted_operand(expected_register, expected_amount);
+
+                    let actual_result = SourceOperand::from_bits(input);
+
+                    assert_eq!(actual_result, expected_result);
+                }
+            }
+
             #[test]
             #[ignore = "not yet written"]
             fn minimum_shift() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_32() {}
+
             #[test]
             #[ignore = "not yet written"]
             fn shift_greater_than_32() {}
         }
         mod rotate_right_extend {
-            use super::*;
+            //const KIND: ShiftKind = ShiftKind::RotateRightExtend;
         }
     }
 }

@@ -24,6 +24,7 @@ impl Bitfield {
         debug_assert!(index < 32);
         self.0 & (1 << index) != 0
     }
+
     pub(crate) fn set_bit(&mut self, index: u32, value: bool) {
         let val = u32::from(value);
         debug_assert!(index < 32);
@@ -35,6 +36,17 @@ impl Bitfield {
         debug_assert!(start.strict_add(length) <= 32);
         let bits: u32 = u32::BITS;
         (self.0.strict_shr(start)) & (u32::MAX.strict_shr(bits.strict_sub(length)))
+    }
+}
+
+#[cfg(test)]
+impl Bitfield {
+    pub(crate) fn set_bits(&mut self, start: u32, length: u32, value: u32) {
+        debug_assert!(length != 0);
+        debug_assert!(start.strict_add(length) <= u32::BITS);
+        let mask = u32::MAX.strict_shr(u32::BITS.strict_sub(length));
+        debug_assert!(value <= mask);
+        self.0 = (self.0 & !mask.strict_shl(start)) | (value & mask).strict_shl(start);
     }
 }
 
