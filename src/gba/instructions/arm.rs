@@ -286,6 +286,14 @@ mod tests {
     mod barrel_shifter {
         use super::*;
 
+        fn minimum_shift_value(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
+            //amount is placeholder, as it is handled by the CPU
+            let amount = ShiftAmount::Register(Register::R10);
+            let shift = Shift { kind, amount };
+            let amount = 0;
+
+            shift.shift(input, amount, carry)
+        }
         fn operand(register: Register, shift: Option<Shift>) -> SourceOperand {
             SourceOperand::Register { register, shift }
         }
@@ -340,8 +348,28 @@ mod tests {
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn minimum_shift() {}
+            fn minimum_shift_carry() {
+                let kind = KIND;
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn minimum_shift_no_carry() {
+                let kind = KIND;
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
             #[ignore = "not yet written"]
@@ -400,9 +428,30 @@ mod tests {
                     assert_eq!(actual_result, expected_result);
                 }
             }
+
             #[test]
-            #[ignore = "not yet written"]
-            fn minimum_shift() {}
+            fn minimum_shift_carry() {
+                let kind = KIND;
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn minimum_shift_no_carry() {
+                let kind = KIND;
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
             #[ignore = "not yet written"]
@@ -463,8 +512,28 @@ mod tests {
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn minimum_shift() {}
+            fn minimum_shift_carry() {
+                let kind = KIND;
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn minimum_shift_no_carry() {
+                let kind = KIND;
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
             #[ignore = "not yet written"]
@@ -528,8 +597,28 @@ mod tests {
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn minimum_shift() {}
+            fn minimum_shift_carry() {
+                let kind = KIND;
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn minimum_shift_no_carry() {
+                let kind = KIND;
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (value, carry);
+
+                let actual_result = minimum_shift_value(kind, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
             #[ignore = "not yet written"]
