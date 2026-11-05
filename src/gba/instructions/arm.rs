@@ -287,16 +287,29 @@ mod tests {
         use super::*;
 
         fn minimum_shift_value(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
+            value_shift(kind, input, 0, carry)
+        }
+
+        fn shift_32(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
+            value_shift(kind, input, 32, carry)
+        }
+
+        fn shift_greater(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
+            value_shift(kind, input, 33, carry)
+        }
+
+        fn value_shift(kind: ShiftKind, input: u32, amount_value: u32, carry: bool) -> (u32, bool) {
             //amount is placeholder, as it is handled by the CPU
             let amount = ShiftAmount::Register(Register::R10);
             let shift = Shift { kind, amount };
-            let amount = 0;
 
-            shift.shift(input, amount, carry)
+            shift.shift(input, amount_value, carry)
         }
+
         fn operand(register: Register, shift: Option<Shift>) -> SourceOperand {
             SourceOperand::Register { register, shift }
         }
+
         mod logical_shift_left {
             use super::*;
             const KIND: ShiftKind = ShiftKind::LogicalShiftLeft;
@@ -361,23 +374,47 @@ mod tests {
 
             #[test]
             fn minimum_shift_no_carry() {
-                let kind = KIND;
                 let carry = false;
                 let value = 0x8000_0001;
                 let expected_result = (value, carry);
 
-                let actual_result = minimum_shift_value(kind, value, carry);
+                let actual_result = minimum_shift_value(KIND, value, carry);
 
                 assert_eq!(actual_result, expected_result);
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_32() {}
+            fn shift_32_carry() {
+                let value = 1;
+                let expected_result = (0, true);
+                let carry = true;
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_greater_than_32() {}
+            fn shift_32_no_carry() {
+                let value = 0;
+                let expected_result = (0, false);
+                let carry = true;
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32() {
+                let value = 0b1000_0000_0000_0000_0000_0000_0000_0001;
+                let expected_result = (0, false);
+                let carry = true;
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
         }
         mod logical_shift_right {
             use super::*;
@@ -454,12 +491,37 @@ mod tests {
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_32() {}
+            fn shift_32_carry() {
+                let value = 0b1000_0000_0000_0000_0000_0000_0000_0000;
+                let expected_result = (0, true);
+                let carry = true;
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_greater_than_32() {}
+            fn shift_32_no_carry() {
+                let value = 0;
+                let expected_result = (0, false);
+                let carry = true;
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32() {
+                let value = 0b1000_0000_0000_0000_0000_0000_0000_0001;
+                let expected_result = (0, false);
+                let carry = true;
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
         }
         mod arithmetic_shift_right {
             use super::*;
