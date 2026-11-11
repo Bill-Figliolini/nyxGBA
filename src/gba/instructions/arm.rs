@@ -493,9 +493,6 @@ mod tests {
                 }
             }
         }
-        mod rotate_right_extend {
-            //const KIND: ShiftKind = ShiftKind::RotateRightExtend;
-        }
         mod shift_values {
             use super::*;
             use ShiftKind::*;
@@ -514,107 +511,51 @@ mod tests {
             }
 
             // (kind, amount, input, carry_in, expected_value, expected_carry)
+            #[rustfmt::skip]
             const CASES: &[(ShiftKind, u32, u32, bool, u32, bool)] = &[
                 // Logical shift left
                 (LogicalShiftLeft, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
                 (LogicalShiftLeft, 0, 0x8000_0001, false, 0x8000_0001, false),
-                (LogicalShiftLeft, 32, 0x0000_0001, true, 0x0000_0000, true),
+                (LogicalShiftLeft, 1, 0x8000_0001, false, 0x0000_0002, true),
+                (LogicalShiftLeft, 31, 0x0000_0003, false, 0x8000_0000, true),
+                (LogicalShiftLeft, 32, 0x0000_0001, false, 0x0000_0000, true),
                 (LogicalShiftLeft, 32, 0x0000_0000, true, 0x0000_0000, false),
                 (LogicalShiftLeft, 33, 0x8000_0001, true, 0x0000_0000, false),
+                (LogicalShiftLeft, 64, 0xFFFF_FFFF, true, 0x0000_0000, false),
                 // Logical shift right
                 (LogicalShiftRight, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
                 (LogicalShiftRight, 0, 0x8000_0001, false, 0x8000_0001, false),
-                (LogicalShiftRight, 32, 0x8000_0000, true, 0x0000_0000, true),
+                (LogicalShiftRight, 1, 0x8000_0001, false, 0x4000_0000, true),
+                (LogicalShiftRight, 31, 0xC000_0000, false, 0x0000_0001, true),
+                (LogicalShiftRight, 32, 0x8000_0000, false, 0x0000_0000, true),
                 (LogicalShiftRight, 32, 0x0000_0000, true, 0x0000_0000, false),
                 (LogicalShiftRight, 33, 0x8000_0001, true, 0x0000_0000, false),
                 // Arithmetic shift right
-                (
-                    ArithmeticShiftRight,
-                    0,
-                    0x7FFF_FFFE,
-                    true,
-                    0x7FFF_FFFE,
-                    true,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    0,
-                    0x8000_0001,
-                    false,
-                    0x8000_0001,
-                    false,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    32,
-                    0x8000_0001,
-                    true,
-                    0xFFFF_FFFF,
-                    true,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    32,
-                    0x8000_0001,
-                    false,
-                    0xFFFF_FFFF,
-                    true,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    33,
-                    0x8000_0001,
-                    true,
-                    0xFFFF_FFFF,
-                    true,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    33,
-                    0x8000_0001,
-                    false,
-                    0xFFFF_FFFF,
-                    true,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    32,
-                    0x7FFF_FFFF,
-                    true,
-                    0x0000_0000,
-                    false,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    32,
-                    0x7FFF_FFFF,
-                    false,
-                    0x0000_0000,
-                    false,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    33,
-                    0x7FFF_FFFF,
-                    true,
-                    0x0000_0000,
-                    false,
-                ),
-                (
-                    ArithmeticShiftRight,
-                    33,
-                    0x7FFF_FFFF,
-                    false,
-                    0x0000_0000,
-                    false,
-                ),
+                (ArithmeticShiftRight, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
+                (ArithmeticShiftRight, 0, 0x8000_0001, false, 0x8000_0001, false),
+                (ArithmeticShiftRight, 1, 0x8000_0001, false, 0xC000_0000, true),
+                // Carry comes from bit 30, not bit 31
+                (ArithmeticShiftRight, 31, 0x8000_0001, true, 0xFFFF_FFFF, false),
+                (ArithmeticShiftRight, 32, 0x8000_0001, true, 0xFFFF_FFFF, true),
+                (ArithmeticShiftRight, 32, 0x8000_0001, false, 0xFFFF_FFFF, true),
+                (ArithmeticShiftRight, 33, 0x8000_0001, true, 0xFFFF_FFFF, true),
+                (ArithmeticShiftRight, 33, 0x8000_0001, false, 0xFFFF_FFFF, true),
+                (ArithmeticShiftRight, 32, 0x7FFF_FFFF, true, 0x0000_0000, false),
+                (ArithmeticShiftRight, 32, 0x7FFF_FFFF, false, 0x0000_0000, false),
+                (ArithmeticShiftRight, 33, 0x7FFF_FFFF, true, 0x0000_0000, false),
+                (ArithmeticShiftRight, 33, 0x7FFF_FFFF, false, 0x0000_0000, false),
                 // Rotate right
                 (RotateRight, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
                 (RotateRight, 0, 0x8000_0001, false, 0x8000_0001, false),
+                (RotateRight, 31, 0x8000_0001, true, 0x0000_0003, false),
                 (RotateRight, 32, 0x8000_0001, false, 0x8000_0001, true),
                 (RotateRight, 32, 0x7FFF_FFFE, true, 0x7FFF_FFFE, false),
                 (RotateRight, 33, 0x8000_0001, false, 0xC000_0000, true),
                 (RotateRight, 33, 0x7FFF_FFFE, true, 0x3FFF_FFFF, false),
+                (RotateRight, 64, 0x8000_0001, false, 0x8000_0001, true),
+                // Rotate right extend (parser always produces amount 1)
+                (RotateRightExtend, 1, 0x8000_0001, false, 0x4000_0000, true),
+                (RotateRightExtend, 1, 0x7FFF_FFFE, true, 0xBFFF_FFFF, false),
             ];
 
             #[test]
