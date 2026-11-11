@@ -121,12 +121,12 @@ impl ShiftKind {
     }
 }
 
-impl Shift {
+impl ShiftKind {
     pub(crate) fn shift(self, input: u32, amount: u32, carry: bool) -> (u32, bool) {
         if amount == 0 {
             return (input, carry);
         }
-        match self.kind {
+        match self {
             ShiftKind::LogicalShiftLeft => match input.checked_shl(amount) {
                 // Strict sub here can not panic, shl will return none if 32 or greater
                 Some(result) => (result, bit(input, 32u32.strict_sub(amount))),
@@ -503,11 +503,7 @@ mod tests {
                 amount_value: u32,
                 carry: bool,
             ) -> (u32, bool) {
-                //amount is placeholder, as it is handled by the CPU
-                let amount = ShiftAmount::Register(Register::R10);
-                let shift = Shift { kind, amount };
-
-                shift.shift(input, amount_value, carry)
+                kind.shift(input, amount_value, carry)
             }
 
             // (kind, amount, input, carry_in, expected_value, expected_carry)

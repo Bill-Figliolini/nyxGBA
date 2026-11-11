@@ -158,7 +158,7 @@ impl Cpu {
                     ShiftAmount::Register(value_register) => self.read(value_register) & 0xFF,
                 };
                 let carry = self.cpsr.carry();
-                let (result, new_carry) = shift.shift(input, value, carry);
+                let (result, new_carry) = shift.kind.shift(input, value, carry);
                 (result, Some(new_carry))
             }
         }
