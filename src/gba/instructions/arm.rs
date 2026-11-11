@@ -468,24 +468,22 @@ mod tests {
 
             #[test]
             fn minimum_shift_carry() {
-                let kind = KIND;
                 let carry = true;
                 let value = 0x7FFF_FFFE;
                 let expected_result = (value, carry);
 
-                let actual_result = minimum_shift_value(kind, value, carry);
+                let actual_result = minimum_shift_value(KIND, value, carry);
 
                 assert_eq!(actual_result, expected_result);
             }
 
             #[test]
             fn minimum_shift_no_carry() {
-                let kind = KIND;
                 let carry = false;
                 let value = 0x8000_0001;
                 let expected_result = (value, carry);
 
-                let actual_result = minimum_shift_value(kind, value, carry);
+                let actual_result = minimum_shift_value(KIND, value, carry);
 
                 assert_eq!(actual_result, expected_result);
             }
@@ -575,35 +573,113 @@ mod tests {
 
             #[test]
             fn minimum_shift_carry() {
-                let kind = KIND;
                 let carry = true;
                 let value = 0x7FFF_FFFE;
                 let expected_result = (value, carry);
 
-                let actual_result = minimum_shift_value(kind, value, carry);
+                let actual_result = minimum_shift_value(KIND, value, carry);
 
                 assert_eq!(actual_result, expected_result);
             }
 
             #[test]
             fn minimum_shift_no_carry() {
-                let kind = KIND;
                 let carry = false;
                 let value = 0x8000_0001;
                 let expected_result = (value, carry);
 
-                let actual_result = minimum_shift_value(kind, value, carry);
+                let actual_result = minimum_shift_value(KIND, value, carry);
 
                 assert_eq!(actual_result, expected_result);
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_32() {}
+            fn shift_32_carry_31_set() {
+                let carry = true;
+                let value = 0x8000_0001;
+                let expected_result = (0xFFFF_FFFF, true);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_greater_than_32() {}
+            fn shift_32_no_carry_31_set() {
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (0xFFFF_FFFF, true);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32_carry_31_set() {
+                let carry = true;
+                let value = 0x8000_0001;
+                let expected_result = (0xFFFF_FFFF, true);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32_no_carry_31_set() {
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (0xFFFF_FFFF, true);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_32_carry_31_unset() {
+                let carry = true;
+                let value = 0x7FFF_FFFF;
+                let expected_result = (0, false);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_32_no_carry_31_unset() {
+                let carry = false;
+                let value = 0x7FFF_FFFF;
+                let expected_result = (0, false);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32_carry_31_unset() {
+                let carry = true;
+                let value = 0x7FFF_FFFF;
+                let expected_result = (0, false);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_than_32_no_carry_31_unset() {
+                let carry = false;
+                let value = 0x7FFF_FFFF;
+                let expected_result = (0, false);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
         }
         mod rotate_right {
             use super::*;
@@ -683,12 +759,48 @@ mod tests {
             }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_32() {}
+            fn shift_32_carry() {
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (value, true);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
 
             #[test]
-            #[ignore = "not yet written"]
-            fn shift_greater_than_32() {}
+            fn shift_32_no_carry() {
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (value, false);
+
+                let actual_result = shift_32(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_carry() {
+                let carry = false;
+                let value = 0x8000_0001;
+                let expected_result = (0xC000_0000, true);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
+
+            #[test]
+            fn shift_greater_no_carry() {
+                let carry = true;
+                let value = 0x7FFF_FFFE;
+                let expected_result = (0x3FFF_FFFF, false);
+
+                let actual_result = shift_greater(KIND, value, carry);
+
+                assert_eq!(actual_result, expected_result);
+            }
         }
         mod rotate_right_extend {
             //const KIND: ShiftKind = ShiftKind::RotateRightExtend;
