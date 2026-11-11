@@ -286,26 +286,6 @@ mod tests {
     mod barrel_shifter {
         use super::*;
 
-        fn minimum_shift_value(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
-            value_shift(kind, input, 0, carry)
-        }
-
-        fn shift_32(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
-            value_shift(kind, input, 32, carry)
-        }
-
-        fn shift_greater(kind: ShiftKind, input: u32, carry: bool) -> (u32, bool) {
-            value_shift(kind, input, 33, carry)
-        }
-
-        fn value_shift(kind: ShiftKind, input: u32, amount_value: u32, carry: bool) -> (u32, bool) {
-            //amount is placeholder, as it is handled by the CPU
-            let amount = ShiftAmount::Register(Register::R10);
-            let shift = Shift { kind, amount };
-
-            shift.shift(input, amount_value, carry)
-        }
-
         fn operand(register: Register, shift: Option<Shift>) -> SourceOperand {
             SourceOperand::Register { register, shift }
         }
@@ -359,62 +339,6 @@ mod tests {
                     assert_eq!(actual_result, expected_result);
                 }
             }
-
-            #[test]
-            fn minimum_shift_carry() {
-                let kind = KIND;
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(kind, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn minimum_shift_no_carry() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_carry() {
-                let value = 1;
-                let expected_result = (0, true);
-                let carry = true;
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_no_carry() {
-                let value = 0;
-                let expected_result = (0, false);
-                let carry = true;
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32() {
-                let value = 0b1000_0000_0000_0000_0000_0000_0000_0001;
-                let expected_result = (0, false);
-                let carry = true;
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
         }
         mod logical_shift_right {
             use super::*;
@@ -465,61 +389,6 @@ mod tests {
                     assert_eq!(actual_result, expected_result);
                 }
             }
-
-            #[test]
-            fn minimum_shift_carry() {
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn minimum_shift_no_carry() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_carry() {
-                let value = 0b1000_0000_0000_0000_0000_0000_0000_0000;
-                let expected_result = (0, true);
-                let carry = true;
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_no_carry() {
-                let value = 0;
-                let expected_result = (0, false);
-                let carry = true;
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32() {
-                let value = 0b1000_0000_0000_0000_0000_0000_0000_0001;
-                let expected_result = (0, false);
-                let carry = true;
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
         }
         mod arithmetic_shift_right {
             use super::*;
@@ -569,116 +438,6 @@ mod tests {
 
                     assert_eq!(actual_result, expected_result);
                 }
-            }
-
-            #[test]
-            fn minimum_shift_carry() {
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn minimum_shift_no_carry() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_carry_31_set() {
-                let carry = true;
-                let value = 0x8000_0001;
-                let expected_result = (0xFFFF_FFFF, true);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_no_carry_31_set() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (0xFFFF_FFFF, true);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32_carry_31_set() {
-                let carry = true;
-                let value = 0x8000_0001;
-                let expected_result = (0xFFFF_FFFF, true);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32_no_carry_31_set() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (0xFFFF_FFFF, true);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_carry_31_unset() {
-                let carry = true;
-                let value = 0x7FFF_FFFF;
-                let expected_result = (0, false);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_no_carry_31_unset() {
-                let carry = false;
-                let value = 0x7FFF_FFFF;
-                let expected_result = (0, false);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32_carry_31_unset() {
-                let carry = true;
-                let value = 0x7FFF_FFFF;
-                let expected_result = (0, false);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_than_32_no_carry_31_unset() {
-                let carry = false;
-                let value = 0x7FFF_FFFF;
-                let expected_result = (0, false);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
             }
         }
         mod rotate_right {
@@ -733,77 +492,144 @@ mod tests {
                     assert_eq!(actual_result, expected_result);
                 }
             }
-
-            #[test]
-            fn minimum_shift_carry() {
-                let kind = KIND;
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(kind, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn minimum_shift_no_carry() {
-                let kind = KIND;
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (value, carry);
-
-                let actual_result = minimum_shift_value(kind, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_carry() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (value, true);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_32_no_carry() {
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (value, false);
-
-                let actual_result = shift_32(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_carry() {
-                let carry = false;
-                let value = 0x8000_0001;
-                let expected_result = (0xC000_0000, true);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
-
-            #[test]
-            fn shift_greater_no_carry() {
-                let carry = true;
-                let value = 0x7FFF_FFFE;
-                let expected_result = (0x3FFF_FFFF, false);
-
-                let actual_result = shift_greater(KIND, value, carry);
-
-                assert_eq!(actual_result, expected_result);
-            }
         }
         mod rotate_right_extend {
             //const KIND: ShiftKind = ShiftKind::RotateRightExtend;
+        }
+        mod shift_values {
+            use super::*;
+            use ShiftKind::*;
+
+            fn value_shift(
+                kind: ShiftKind,
+                input: u32,
+                amount_value: u32,
+                carry: bool,
+            ) -> (u32, bool) {
+                //amount is placeholder, as it is handled by the CPU
+                let amount = ShiftAmount::Register(Register::R10);
+                let shift = Shift { kind, amount };
+
+                shift.shift(input, amount_value, carry)
+            }
+
+            // (kind, amount, input, carry_in, expected_value, expected_carry)
+            const CASES: &[(ShiftKind, u32, u32, bool, u32, bool)] = &[
+                // Logical shift left
+                (LogicalShiftLeft, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
+                (LogicalShiftLeft, 0, 0x8000_0001, false, 0x8000_0001, false),
+                (LogicalShiftLeft, 32, 0x0000_0001, true, 0x0000_0000, true),
+                (LogicalShiftLeft, 32, 0x0000_0000, true, 0x0000_0000, false),
+                (LogicalShiftLeft, 33, 0x8000_0001, true, 0x0000_0000, false),
+                // Logical shift right
+                (LogicalShiftRight, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
+                (LogicalShiftRight, 0, 0x8000_0001, false, 0x8000_0001, false),
+                (LogicalShiftRight, 32, 0x8000_0000, true, 0x0000_0000, true),
+                (LogicalShiftRight, 32, 0x0000_0000, true, 0x0000_0000, false),
+                (LogicalShiftRight, 33, 0x8000_0001, true, 0x0000_0000, false),
+                // Arithmetic shift right
+                (
+                    ArithmeticShiftRight,
+                    0,
+                    0x7FFF_FFFE,
+                    true,
+                    0x7FFF_FFFE,
+                    true,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    0,
+                    0x8000_0001,
+                    false,
+                    0x8000_0001,
+                    false,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    32,
+                    0x8000_0001,
+                    true,
+                    0xFFFF_FFFF,
+                    true,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    32,
+                    0x8000_0001,
+                    false,
+                    0xFFFF_FFFF,
+                    true,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    33,
+                    0x8000_0001,
+                    true,
+                    0xFFFF_FFFF,
+                    true,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    33,
+                    0x8000_0001,
+                    false,
+                    0xFFFF_FFFF,
+                    true,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    32,
+                    0x7FFF_FFFF,
+                    true,
+                    0x0000_0000,
+                    false,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    32,
+                    0x7FFF_FFFF,
+                    false,
+                    0x0000_0000,
+                    false,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    33,
+                    0x7FFF_FFFF,
+                    true,
+                    0x0000_0000,
+                    false,
+                ),
+                (
+                    ArithmeticShiftRight,
+                    33,
+                    0x7FFF_FFFF,
+                    false,
+                    0x0000_0000,
+                    false,
+                ),
+                // Rotate right
+                (RotateRight, 0, 0x7FFF_FFFE, true, 0x7FFF_FFFE, true),
+                (RotateRight, 0, 0x8000_0001, false, 0x8000_0001, false),
+                (RotateRight, 32, 0x8000_0001, false, 0x8000_0001, true),
+                (RotateRight, 32, 0x7FFF_FFFE, true, 0x7FFF_FFFE, false),
+                (RotateRight, 33, 0x8000_0001, false, 0xC000_0000, true),
+                (RotateRight, 33, 0x7FFF_FFFE, true, 0x3FFF_FFFF, false),
+            ];
+
+            #[test]
+            fn shift_tests() {
+                for &(kind, amount, input, carry, expected_value, expected_carry) in CASES {
+                    let expected_result = (expected_value, expected_carry);
+
+                    let actual_result = value_shift(kind, input, amount, carry);
+
+                    assert_eq!(
+                        actual_result, expected_result,
+                        "{kind:?} by {amount} of {input:#010X}, carry_in={carry}"
+                    );
+                }
+            }
         }
     }
 }
